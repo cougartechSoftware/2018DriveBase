@@ -2,6 +2,7 @@ package org.usfirst.frc.team2228.robot;
 
 import java.io.File;
 
+import org.usfirst.frc.team2228.commands.JustDriveCommand;
 import org.usfirst.frc.team2228.commands.StringCommand;
 import org.usfirst.frc.team2228.commands.WaitCommand;
 
@@ -22,20 +23,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  */
 public class Robot extends IterativeRobot {
 	final String branchStr = "2018DriveBase";
-	final String versionStr = " 0.2.2";
-	final String defaultAuto = "Default";
-	final String customAuto = "My Auto";
+	final String versionStr = " 0.2.3";
 	
-	String autoSelected;
-	SendableChooser<String> autoChooser;
-	
-	Command autonomousCommand;
-	/*
-	SendableChooser<Command> chooser = new SendableChooser<>();
-	*/
 	private Joystick joystick;
 	private SRXDriveBase driveBase;
-	private ChessyController chessyDrive;
+	private TeleopController chessyDrive;
+	private AutonomousManager autoMgr;
 
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -43,18 +36,15 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void robotInit() {
-		autoChooser = new SendableChooser<String>();
-		autoChooser.addDefault("Default Auto", defaultAuto);
-		autoChooser.addObject("My Auto", customAuto);
-        SmartDashboard.putData("Auto choices", autoChooser);
-		autonomousCommand = null;
 		
 		SmartDashboard.putString("version #", (branchStr + versionStr));
 		
 		// put axis and button mapping in DriverConfig
 		joystick = new Joystick(RobotMap.JOYSTICK_1);
 		driveBase = new SRXDriveBase();
-		chessyDrive = new ChessyController(joystick, driveBase);
+		chessyDrive = new TeleopController(joystick, driveBase);
+		autoMgr = new AutonomousManager(driveBase);
+		
 		  
 		File _logDirectory = new File("/home/lvuser/log");
 		if (!_logDirectory.exists()) {
@@ -78,26 +68,7 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousInit() {
-    	autoSelected = (String) autoChooser.getSelected();
-		System.out.println("Auto selected: " + autoSelected);
-		Scheduler scheduler = Scheduler.getInstance();
-			
-		switch (autoSelected) {
-			case customAuto:
-				scheduler.add(new StringCommand("customAuto!"));
-				scheduler.add(new WaitCommand(0.5));
-				scheduler.add(new StringCommand("and again"));
-				break;
-			case defaultAuto:
-			default:
-				autonomousCommand = new StringCommand("doNothing!");
-			    autonomousCommand.start();
-				break;
-			}
-		
-		// schedule the autonomous command (example)
-		if (autonomousCommand != null)
-		   autonomousCommand.start();
+		autoMgr.autonomousInit();
 	}
 
 	/**
@@ -109,10 +80,10 @@ public class Robot extends IterativeRobot {
 	}
 	
 	public void teleopInit() {
-		if (autonomousCommand != null)
-			autonomousCommand.cancel();
-		 System.out.println("teleopInit() fi!");
-		 chessyDrive.teleopInit();
+		autoMgr.killAuto();
+		System.out.println("teleopInit() fi!");
+		
+		chessyDrive.teleopInit();
 	}
 
 	/**

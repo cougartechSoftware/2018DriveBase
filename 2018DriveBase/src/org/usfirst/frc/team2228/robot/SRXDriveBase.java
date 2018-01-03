@@ -18,7 +18,9 @@ import com.ctre.CANTalon.FeedbackDevice;
 import com.ctre.CANTalon.TalonControlMode;
 //import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class SRXDriveBase {
 	
@@ -27,6 +29,8 @@ public class SRXDriveBase {
 	private CANTalon driveRightFollowerMtr;
 	private CANTalon driveLeftMasterMtr;
 	private CANTalon driveLeftFollowerMtr;
+	
+	private RobotDrive driveStyle;
 	
 	private boolean isDriveMoving;
 	private double rightDrvTrainTargetPosSetPt;
@@ -49,7 +53,31 @@ public class SRXDriveBase {
 		
 		isDriveMoving = false;
 		
-		enableMasterFollowerControl();
+		/*  Set right/left masters and right/left followers 
+		*/
+		// Set Right master to speed mode
+		driveRightMasterMtr.changeControlMode(TalonControlMode.PercentVbus);
+		driveRightMasterMtr.enableControl(); 
+		driveRightMasterMtr.set(0);
+		
+		// Set up right follower
+		driveRightFollowerMtr.changeControlMode(TalonControlMode.Follower);
+		
+		// Set follower motor to follow master
+		driveRightFollowerMtr.set(driveRightMasterMtr.getDeviceID());
+		driveRightFollowerMtr.enableControl(); 
+
+		// Set left master to speed mode
+		driveLeftMasterMtr.changeControlMode(TalonControlMode.PercentVbus);
+		driveLeftMasterMtr.enableControl();
+		driveLeftMasterMtr.set(0);
+		
+		// Set up left follower
+		driveLeftFollowerMtr.changeControlMode(TalonControlMode.Follower);
+		
+		// Set follower motor to follow master
+		driveLeftFollowerMtr.set(driveLeftMasterMtr.getDeviceID());
+		driveLeftFollowerMtr.enableControl(); 
 		
 		driveRightMasterMtr.setInverted(SRXDriveBaseCfg.isDriveRightMasterMtrReversed);
 		driveRightFollowerMtr.setInverted(SRXDriveBaseCfg.isDriveRightFollowerMtrReversed);
@@ -103,6 +131,8 @@ public class SRXDriveBase {
 			driveLeftMasterMtr.setD(SRXDriveBaseCfg.kdriveLeftMstrDerivativeGain);				
 		}
 		
+		driveStyle = new RobotDrive(driveRightMasterMtr, driveLeftMasterMtr);
+		
 		/*
 		* Clear all sticky faults in drive controllers
 		*/
@@ -115,31 +145,7 @@ public class SRXDriveBase {
 	}	
 	
 	public void enableMasterFollowerControl(){
-		/*  Set right/left masters and right/left followers 
-		*/
-		// Set Right master to speed mode
-		driveRightMasterMtr.changeControlMode(TalonControlMode.PercentVbus);
-		driveRightMasterMtr.enableControl(); 
-		driveRightMasterMtr.set(0);
-		
-		// Set up right follower
-		driveRightFollowerMtr.changeControlMode(TalonControlMode.Follower);
-		
-		// Set follower motor to follow master
-		driveRightFollowerMtr.set(driveRightMasterMtr.getDeviceID());
-		driveRightFollowerMtr.enableControl(); 
-
-		// Set left master to speed mode
-		driveLeftMasterMtr.changeControlMode(TalonControlMode.PercentVbus);
-		driveLeftMasterMtr.enableControl();
-		driveLeftMasterMtr.set(0);
-		
-		// Set up left follower
-		driveLeftFollowerMtr.changeControlMode(TalonControlMode.Follower);
-		
-		// Set follower motor to follow master
-		driveLeftFollowerMtr.set(driveLeftMasterMtr.getDeviceID());
-		driveLeftFollowerMtr.enableControl(); 
+	
 	}
 			
 	
@@ -253,6 +259,12 @@ public class SRXDriveBase {
 		 } else {
 			driveRightMasterMtr.set(rightMotorSpeed);
 			driveLeftMasterMtr.set(leftMotorSpeed);
+			SmartDashboard.putNumber("rCounts", driveRightMasterMtr.getPosition());
+			SmartDashboard.putNumber("lCounts", driveLeftMasterMtr.getPosition());
+			DebugLogger.log("rightEncoder:" + driveRightMasterMtr.getPosition() 
+			                + "leftEncoder:" + driveLeftMasterMtr.getPosition());
+			DebugLogger.data(rightMotorSpeed + "," + leftMotorSpeed + "," +
+			                 driveRightMasterMtr.getSpeed() + "," + driveLeftMasterMtr.getSpeed());
 		}
 	}
 	
@@ -339,6 +351,22 @@ public class SRXDriveBase {
 	}
 	
 	public void SRXBaseDrivePowerMoveToPosition(double _PwrMoveToPositionValue) {
+		
+	}
+	
+	public boolean moveInchesAndSpeed(double distance, double speed) {
+		boolean moveDone = false;
+		double leftEncoderCounts = distance / SRXDriveBaseCfg.kLftInchesPerCount;
+		double rightEncoderCounts = distance / SRXDriveBaseCfg.kRgtInchesPerCount;
+		if ((Math.abs(driveRightMasterMtr.getEncPosition()) < rightEncoderCounts) &&
+				(Math.abs(driveLeftMasterMtr.getEncPosition()) < leftEncoderCounts)) {
+			setTurnAndThrottle(0, speed);
+		}
+		else {
+			DebugLogger.log("move is done");
+			moveDone = true;
+		}
+		return moveDone;
 		
 	}
 

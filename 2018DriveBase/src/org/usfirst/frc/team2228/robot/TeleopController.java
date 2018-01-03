@@ -2,13 +2,13 @@ package org.usfirst.frc.team2228.robot;
 
 import edu.wpi.first.wpilibj.Joystick;
 
-public class ChessyController {
+public class TeleopController {
 	private Joystick joystick;
 	private SRXDriveBase driveBase;
 
 	// smooth move parameters
 	public double previousEMAValue = 0.0; // -1 to 1
-	public int timePeriodSF =  ChessyControllerCfg.kHighSmoothPeriod;
+	public int timePeriodSF =  TeleopControllerCfg.kHighSmoothPeriod;
 		// tipping filter
 	protected double smoothFactor = 1.0;
 		
@@ -16,7 +16,7 @@ public class ChessyController {
 	private short loggerThreshold = 20;
 	
 	
-	public ChessyController(Joystick _joystick,
+	public TeleopController(Joystick _joystick,
 			                SRXDriveBase _driveBase){
 		joystick = _joystick;
 		driveBase = _driveBase;
@@ -27,7 +27,7 @@ public class ChessyController {
 	}
 	
 	public void teleopPeriodic(){
-	   double origThrottle = joystick.getRawAxis(DriverConfig.throttle);
+	   double origThrottle = joystick.getRawAxis(DriverConfig.throttle) * TeleopControllerCfg.kInvertJoystick;
 	   double origTurn = joystick.getRawAxis(DriverConfig.turn);
 	
 	   double turn = origTurn;
@@ -61,8 +61,8 @@ public class ChessyController {
 			 * stick to provide a more realistic feel for turning
 			 */
 			double fTurn = _turn;
-			if (ChessyControllerCfg.isTurnSensitivityEnabled) {
-		     if (ChessyControllerCfg.isLowSpeedFactorEnabled) {
+			if (TeleopControllerCfg.isTurnSensitivityEnabled) {
+		     if (TeleopControllerCfg.isLowSpeedFactorEnabled) {
 			   fTurn = ApplySineFunction(fTurn);
 			   fTurn = ApplySineFunction(fTurn);
 			   } else {
@@ -103,7 +103,7 @@ public class ChessyController {
 			 */
 			double fThrottle = _throttle;
 
-			switch (ChessyControllerCfg.sensitivitySet) {
+			switch (TeleopControllerCfg.sensitivitySet) {
 			  case Linear:
 				  // no change
 				  break;
@@ -117,8 +117,8 @@ public class ChessyController {
 				  break;
 				  
 			  case Cubed:
-				  fThrottle = ( ChessyControllerCfg.kThrottleCubedGain * (Math.pow(_throttle, 3)) )
-				              + ( (1-ChessyControllerCfg.kThrottleCubedGain)*_throttle );
+				  fThrottle = ( TeleopControllerCfg.kThrottleCubedGain * (Math.pow(_throttle, 3)) )
+				              + ( (1-TeleopControllerCfg.kThrottleCubedGain)*_throttle );
 				  break;
 				  
 			  default:
@@ -146,27 +146,27 @@ public class ChessyController {
 			double deltaValue = fThrottle - previousEMAValue;
 
 			//		if (driver.GetSmoothMoveEnabled()) {
-			if ((fThrottle > 0) && (previousEMAValue < -ChessyControllerCfg.ZERO_DEAD_BAND)) // || ((value < 0) &&
+			if ((fThrottle > 0) && (previousEMAValue < -TeleopControllerCfg.ZERO_DEAD_BAND)) // || ((value < 0) &&
 															// (oldEMA > 0))){
 			{
 				// we're tipping!!
 				fThrottle = 0;
-				timePeriodSF = ChessyControllerCfg.kHighSmoothPeriod;
+				timePeriodSF = TeleopControllerCfg.kHighSmoothPeriod;
 				// System.out.println("Tipping forward");
 			}
-			else if ((fThrottle < 0) && (previousEMAValue > ChessyControllerCfg.ZERO_DEAD_BAND))
+			else if ((fThrottle < 0) && (previousEMAValue > TeleopControllerCfg.ZERO_DEAD_BAND))
 			{// we're tipping!!
 				fThrottle = 0;
-				timePeriodSF = ChessyControllerCfg.kHighSmoothPeriod;
+				timePeriodSF = TeleopControllerCfg.kHighSmoothPeriod;
 				// System.out.println("tipping backward");
 			}
 
 			double smoothFactor = 2.0 / (timePeriodSF + 1);
 			fThrottle = previousEMAValue + smoothFactor * (fThrottle - previousEMAValue);
 
-			if (Math.abs(previousEMAValue) < ChessyControllerCfg.ZERO_DEAD_BAND)
+			if (Math.abs(previousEMAValue) < TeleopControllerCfg.ZERO_DEAD_BAND)
 			{
-				timePeriodSF = ChessyControllerCfg.kLowSmoothPeriod;
+				timePeriodSF = TeleopControllerCfg.kLowSmoothPeriod;
 			}
 
 			previousEMAValue = fThrottle;
@@ -207,12 +207,12 @@ public class ChessyController {
 				// If joystick change is large enough to cause a wheelie or cause the
 				// robot to start to tip - the robot intervenes to see that this does
 				// not occur The following limits the change in joystick movement
-				if (Math.abs(deltaValue) > ChessyControllerCfg.kTransitionMaxDelta){
-					smoothFactor = ChessyControllerCfg.kTransitionSmoothFactor;
+				if (Math.abs(deltaValue) > TeleopControllerCfg.kTransitionMaxDelta){
+					smoothFactor = TeleopControllerCfg.kTransitionSmoothFactor;
 				} else {	
 				
 					// If driver behaves
-					smoothFactor = ChessyControllerCfg.klowSmoothFactor;
+					smoothFactor = TeleopControllerCfg.klowSmoothFactor;
 				}
 			}
 			
@@ -222,19 +222,19 @@ public class ChessyController {
 				// Check for large deltaValue that may cause a wheelie or 
 				// rotation torque to a high Center of gravity on decel
 
-					if (Math.abs(deltaValue) > ChessyControllerCfg.kMaxDeltaVelocity){
-						smoothFactor = ChessyControllerCfg.kHighSmoothFactor;
+					if (Math.abs(deltaValue) > TeleopControllerCfg.kMaxDeltaVelocity){
+						smoothFactor = TeleopControllerCfg.kHighSmoothFactor;
 					} else {	
 					
 						// If driver behaves
-						smoothFactor = ChessyControllerCfg.klowSmoothFactor;
+						smoothFactor = TeleopControllerCfg.klowSmoothFactor;
 					}
 			}
 			
 			// Check if the smoothing filter is within the joystick deadband and put filter in high response gain
-			if (Math.abs(value) < ChessyControllerCfg.ZERO_DEAD_BAND) {
+			if (Math.abs(value) < TeleopControllerCfg.ZERO_DEAD_BAND) {
 				value = 0;  // not previousValue?
-				smoothFactor = ChessyControllerCfg.klowSmoothFactor;
+				smoothFactor = TeleopControllerCfg.klowSmoothFactor;
 			} 		
 			// Run through smoothing filter	
 			/* 
@@ -257,12 +257,12 @@ public class ChessyController {
 		
 		public double ApplySineFunction(double _turn) {
 			// kTurnSensitivityHighGain should be 0.1 to 1.0 used for chezy turn control
-			double factor = Math.PI/2.0 * ChessyControllerCfg.kTurnSensitivityHighGain;
+			double factor = Math.PI/2.0 * TeleopControllerCfg.kTurnSensitivityHighGain;
 			return Math.sin(factor * _turn)/Math.sin(factor);
 		}
 		
 		public double AdjustForControllerDeadBand(double value) {
-			if (Math.abs(value) < ChessyControllerCfg.JOY_STICK_DEADBAND) {
+			if (Math.abs(value) < TeleopControllerCfg.ZERO_DEAD_BAND) {
 				return 0;
 			}
 			else return value;

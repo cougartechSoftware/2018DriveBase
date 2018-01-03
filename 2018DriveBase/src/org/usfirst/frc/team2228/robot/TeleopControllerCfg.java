@@ -1,12 +1,11 @@
 package org.usfirst.frc.team2228.robot;
 
-public class ChessyControllerCfg {
+public class TeleopControllerCfg {
 	//  defines minimum joystick moves to be acted on 
-	public static final double JOY_STICK_DEADBAND = 0.2;
-	public static final double QUICK_TURN_SPEED = 0.7;
+	public static final double kInvertJoystick = -1.0;
 	
     public static final double MAX_DELTA_VELOCITY = 0.2;
-    public static final double ZERO_DEAD_BAND = 0.1;
+    public static final double ZERO_DEAD_BAND = 0.2;
     
     // used the in the sine function for turning
     public static boolean isTurnSensitivityEnabled = true;
@@ -24,13 +23,7 @@ public class ChessyControllerCfg {
     public static ThrottleSensitivity sensitivitySet = ThrottleSensitivity.Linear;
     public static final double kThrottleCubedGain = 1.0; // 0 to 1; 0 is linear (output==input) 1 is cubed (output=input**3)
     
-    // intended for AdjustSpeedRequest, like "gear" shifting
-    public static final double kLowMaxSpeedFactor = 0.7;
     
-    public static final double kHeadingTargetAngle = 0;
-    public static final double kPHeadingGain = 0;
-    public static final double kDHeadingGain = 0;
-    public static final double kTestJogSpeed = 0.2;
     
 	// used for "smooth move" -- the tipping filter for extreme changes in joystick
 	public static final int kLowSmoothPeriod = 5;

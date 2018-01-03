@@ -17,9 +17,6 @@ public class SRXDriveBaseCfg {
 		
 		public static boolean isDriveStraightAssistEnabled = false;
 		
-		// CTRE CIMcode magnetic quadrature 20 pulse per revolution
-		public static int DRIVE_RIGHT_ENCODER_CNTS_PER_REV = 80;
-		public static int DRIVE_LEFT_ENCODER_CNTS_PER_REV = 80;
 		
 		public static boolean isPIDEnabled = false;
 		
@@ -41,8 +38,12 @@ public class SRXDriveBaseCfg {
 		public static double kCalibratedLftWheelCircum = kWheelDiameter*Math.PI;
 		// AndyMark tough gox mini 14:50 to 16:48
 		public static double kGearBoxRatio = (50.0/14.0)*(48.0/16.0);
-		public static double kCountsPerRevolution = DRIVE_RIGHT_ENCODER_CNTS_PER_REV
-				             * kGearBoxRatio;
+		public static double kCountsPerRevolution = 80.0 * kGearBoxRatio;
+
+		// CTRE CIMcode magnetic quadrature 20 pulse per revolution
+		public static int DRIVE_RIGHT_ENCODER_CNTS_PER_REV = 20 * (int)kGearBoxRatio;
+		public static int DRIVE_LEFT_ENCODER_CNTS_PER_REV = 20 * (int)kGearBoxRatio;
+		
 		// inches per revolution / counts per revolution
 		public static double kRgtInchesPerCount = kCalibratedRgtWheelCircum/kCountsPerRevolution;
 		public static double kLftInchesPerCount = kCalibratedRgtWheelCircum/kCountsPerRevolution;

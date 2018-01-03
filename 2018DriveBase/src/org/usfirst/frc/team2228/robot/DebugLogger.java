@@ -24,7 +24,7 @@ class FormatterForFileHandler extends java.util.logging.Formatter {
     // Create a DateFormat to format the logger timestamp.
     //
     private final DateFormat df = new SimpleDateFormat(
-            "yyyy/MM/dd hh:mm:ss.SSS");
+            "MM/dd hh:mm:ss.SSS");
 
     public String format(LogRecord record) {
         StringBuilder builder = new StringBuilder(1000);
@@ -62,7 +62,7 @@ public class DebugLogger {
 	
 	static {
 		//ISO8601 = new SimpleDateFormat("yyyyMMddHHmmssSSSXXX");
-		format = new SimpleDateFormat("M-d_HHmmss");
+		format = new SimpleDateFormat("M-d_HHmmssSSS");
 	}
 	
 	/**
@@ -78,7 +78,7 @@ public class DebugLogger {
 				csv = Logger.getLogger("DataLog");
 				formatter = new FormatterForFileHandler();
 				fh = new FileHandler(filePath
-						  + format.format(Calendar.getInstance().getTime()) + ".log");				
+						  + format.format(Calendar.getInstance().getTime()) + ".txt");				
 				fh.setFormatter(formatter);
 				fhC = new FileHandler(filePath
 						  + format.format(Calendar.getInstance().getTime()) + ".csv");				
@@ -127,7 +127,7 @@ public class DebugLogger {
 	}
 	
 	
-	public static void DataLog(String data){
+	public static void data(String data){
 
 		if (is_logging) {
 			// Get the time outside of synchronized code so it captures most accurately the time when log() is invoked
