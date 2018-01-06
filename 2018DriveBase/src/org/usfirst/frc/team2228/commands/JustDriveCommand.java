@@ -43,6 +43,8 @@ public class JustDriveCommand extends Command {
 	// Called once after isFinished returns true
 	@Override
 	protected void end() {
+		drive.setRightPower(0);
+		drive.setLeftPower(0);
 		System.out.println("just drive done");
 	}
 

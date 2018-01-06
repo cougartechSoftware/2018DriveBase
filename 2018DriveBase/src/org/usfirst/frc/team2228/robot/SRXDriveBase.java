@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class SRXDriveBase {
+	private String VersionString = "Release 1, RevB 180105";
 	
 	// cheesy or tank motors
 	private CANTalon driveRightMasterMtr;
@@ -36,6 +37,7 @@ public class SRXDriveBase {
 	private double rightDrvTrainTargetPosSetPt;
 	private double leftDrvTrainTargetPosSetPt;
 	
+	//private AHRS IMU;
 		
 	// SRXDriveBase Class Constructor
 	public SRXDriveBase() {
@@ -99,7 +101,7 @@ public class SRXDriveBase {
 		/*
 		* Set Brake-Coast mode to coast
 		*/
-		setBrakeMode(false);
+		setBrakeMode(SRXDriveBaseCfg.isBrakeEnabled);
 		
 		/*
 		* Setup encoder feedback if there are encoders on master motors
@@ -130,6 +132,70 @@ public class SRXDriveBase {
 			driveLeftMasterMtr.setI(SRXDriveBaseCfg.kdriveLeftMstrIntegralGain);
 			driveLeftMasterMtr.setD(SRXDriveBaseCfg.kdriveLeftMstrDerivativeGain);				
 		}
+		/*
+		* Setup closed-loop velocity and Setup PID values if enabled
+		*/
+		
+		if (SRXDriveBaseCfg.isSRXClosedLoopEnabled){
+			
+			driveRightMasterMtr.setPID(SRXDriveBaseCfg.kdriveRightMstrProportionalGain,
+										SRXDriveBaseCfg.kdriveRightMstrIntegralGain,
+										SRXDriveBaseCfg.kdriveRightMstrDerivativeGain,
+										SRXDriveBaseCfg.kdriveRightMstrFeedForwardGain,
+										SRXDriveBaseCfg.kdriveRightMstrIzone,
+										SRXDriveBaseCfg.kdriveRightMstrRampRate,
+										SRXDriveBaseCfg.kdriveRightMstrProfile);
+										
+			driveLeftMasterMtr.setPID(SRXDriveBaseCfg.kdriveLeftMstrProportionalGain,
+										SRXDriveBaseCfg.kdriveLeftMstrIntegralGain,
+										SRXDriveBaseCfg.kdriveLeftMstrDerivativeGain,
+										SRXDriveBaseCfg.kdriveLeftMstrFeedForwardGain,
+										SRXDriveBaseCfg.kdriveLeftMstrIzone,
+										SRXDriveBaseCfg.kdriveLeftMstrRampRate,
+										SRXDriveBaseCfg.kdriveLeftMstrProfile);	
+			
+			// set controlMode to speed with feedback
+			// Note speed is in RPM, thus -1 to 1 input needs to be multiplied by max RPM
+			driveRightMasterMtr.changeControlMode(TalonControlMode.Speed);
+			driveLeftMasterMtr.changeControlMode(TalonControlMode.Speed);
+			
+			// ?? to test should we use this for autonomous
+			// driveRightMasterMtr.disableNominalClosedLoopVoltage();
+			// The following compensates for battery voltage - 50% output would be %50 of 11 volts
+			// driveRightMasterMtr.setNominalClosedLoopVoltage(11.0);
+			
+			// cnts / 4096 cnts/rev(magnetic encoder); 100/4096= 2.4%; 8.7 degrees
+			driveRightMasterMtr.setAllowableClosedLoopErr(100);
+			driveLeftMasterMtr.setAllowableClosedLoopErr(100);
+			
+			// Sample period in ms from supported sample periods-default 100ms period/64 sample window
+			driveRightMasterMtr.SetVelocityMeasurementPeriod(VelocityMeasurementPeriod.Period_25Ms);
+			driveLeftMasterMtr.SetVelocityMeasurementPeriod(VelocityMeasurementPeriod.Period_25Ms);
+			
+			// Number if sanples in a rolling average 
+			driveRightMasterMtr.SetVelocityMeasurementWindow(16);
+			driveLeftMasterMtr.SetVelocityMeasurementWindow(16);
+			
+			// Activate closed-Loop velocity
+			driveRightMasterMtr.set(0);
+			driveLeftMasterMtr.set(0);
+		}
+		
+		/*
+		* setup IMU if enabled
+		*/
+		if (SRXDriveBaseCfg.isHeadingModuleEnabled){
+			try
+			{
+			//	imu = new AHRS(SPI.Port.kOnboardCS0);
+			}
+			catch (RuntimeException ex)
+			{
+				System.out.println("Error starting the Nav-X");
+			}
+			//imu.zeroYaw();
+		}
+
 		
 		driveStyle = new RobotDrive(driveRightMasterMtr, driveLeftMasterMtr);
 		
@@ -143,10 +209,6 @@ public class SRXDriveBase {
 		
 	
 	}	
-	
-	public void enableMasterFollowerControl(){
-	
-	}
 			
 	
 	/*================================================================
@@ -163,19 +225,10 @@ public class SRXDriveBase {
 	}
 	
 	public void setBrakeMode(boolean isBrakeEnabled){
-		if (SRXDriveBaseCfg.isBrakeEnabled) {
-		driveRightMasterMtr.enableBrakeMode(false);
-		driveRightFollowerMtr.enableBrakeMode(false);
-		driveLeftMasterMtr.enableBrakeMode(false);
-		driveLeftFollowerMtr.enableBrakeMode(false);	
-			
-		} else {
-		driveRightMasterMtr.enableBrakeMode(true);
-		driveRightFollowerMtr.enableBrakeMode(true);
-		driveLeftMasterMtr.enableBrakeMode(true);
-		driveLeftFollowerMtr.enableBrakeMode(true);	
-			
-		}
+		driveRightMasterMtr.enableBrakeMode(isBrakeEnabled);
+		driveRightFollowerMtr.enableBrakeMode(isBrakeEnabled);
+		driveLeftMasterMtr.enableBrakeMode(isBrakeEnabled);
+		driveLeftFollowerMtr.enableBrakeMode(isBrakeEnabled);
 	}
 	
 	/*=====================================================
@@ -233,9 +286,14 @@ public class SRXDriveBase {
 		driveLeftMasterMtr.set(LeftPowerLevel);
 	}
 	
+	public void arcadeMoveAndRotate(double moveValue, double rotateValue) {
+		driveStyle.arcadeDrive(moveValue, rotateValue, false);
+	}
+	
+	
 	public void setTurnAndThrottle(double rotateValue, double moveValue){
-		double rightMotorSpeed;
-		double leftMotorSpeed;
+		double rightMotorSpeed = 0.0;
+		double leftMotorSpeed = 0.0;
 		
 		if (moveValue > 0.0) {  // forward
 		   if (rotateValue > 0.0) {
@@ -369,5 +427,195 @@ public class SRXDriveBase {
 		return moveDone;
 		
 	}
+	
+	// Reads encoder, velocity, current, error, and displays on smartdashboard
+	public void UpdateSRXDrive(){
+		
+		// Display SRXBaseDrive version
+		SmartDashboard.putString("SRXBaseDrive-Version", VersionString);
+		// Display SRX module values
+		SmartDashboard.putNumber("SRXBaseDrive-Right Encoder Count", driveRightMasterMtr.getPosition());
+		SmartDashboard.putNumber("SRXBaseDrive-Speed Right", driveRightMasterMtr.getSpeed());
+		SmartDashboard.putNumber("SRXBaseDrive-Speed Right", driveRightMasterMtr.getClosedLoopError());
+		SmartDashboard.putNumber("SRXBaseDrive-Right Bus Voltage", driveRightMasterMtr.getBusVoltage());
+		SmartDashboard.putNumber("SRXBaseDrive-Right Output Voltage", driveRightMasterMtr.getOutputVoltage());
+		SmartDashboard.putNumber("SRXBaseDrive-Current Right Master", driveRightMasterMtr.getOutputCurrent());
+		SmartDashboard.putNumber("SRXBaseDrive-Current Right Follower", driveRightFollowerMtr.getOutputCurrent());
+		
+		SmartDashboard.putNumber("SRXBaseDrive-Left Encoder Count", driveLeftMasterMtr.getPosition());
+		SmartDashboard.putNumber("SRXBaseDrive-Speed Left", driveLeftMasterMtr.getSpeed());
+		SmartDashboard.putNumber("SSRXBaseDrive-peed Left", driveLeftMasterMtr.getClosedLoopError());
+		SmartDashboard.putNumber("SRXBaseDrive-Left Bus Voltage", driveLeftMasterMtr.getBusVoltage());
+		SmartDashboard.putNumber("SRXBaseDrive-SRXBaseDrive-Left Output Voltage", driveLeftMasterMtr.getOutputVoltage());
+		SmartDashboard.putNumber("SRXBaseDrive-Current Left Master", driveLeftMasterMtr.getOutputCurrent());
+		SmartDashboard.putNumber("SRXBaseDrive-Current Left Follower", driveRightFollowerMtr.getOutputCurrent());
+		
+		if (SRXDriveBaseCfg.isHeadingModuleEnabled) {
+			//Display Inertial Measurement Unit (IMU) values
+			/*
+			SmartDashboard.putNumber("SRXBaseDrive-ANGLE NAVX", imu.getAngle());
+			SmartDashboard.putNumber("SRXBaseDrive-IMU_Yaw", imu.getYaw());
+			SmartDashboard.putNumber("SRXBaseDrive-IMU_Pitch", imu.getPitch());
+			SmartDashboard.putNumber("SRXBaseDrive-IMU_Roll", imu.getRoll());
+			*/
+		}
+		// check for stall current and motor burnout
+		// to do
+	}
+	
+	public double PIDDriveStraightCorrection(){
+		// This method uses the IMU and a PID equation to provide drive straight correction
+		return 0.0;
+	}
+	
+	
+	public void SRXBaseDriveRotate(boolean _direction) {
+		// This rotates a preset power level of 0.2; 
+		// direction(true)-rotates right, direction(false)-rotates left
+		if (_direction){
+			driveRightMasterMtr.set(SRXDriveBaseCfg.kRotatePowerLevel * SRXDriveBaseCfg.kDriveStraightCorrection);
+			driveLeftMasterMtr.set(-SRXDriveBaseCfg.kRotatePowerLevel);
+		} else {
+			driveRightMasterMtr.set(-SRXDriveBaseCfg.kRotatePowerLevel * SRXDriveBaseCfg.kDriveStraightCorrection);
+			driveLeftMasterMtr.set(SRXDriveBaseCfg.kRotatePowerLevel);
+		}
+	}
+
+
+	public boolean SRXBaseDriveRotateToAngle(double _rotateAngleValue){
+		// this method needs work
+		if (SRXDriveBaseCfg.isIMUEnabled) {
+			// read the heading from the IMU module and clear heading on IMU module on first call
+		} else if (SRXDriveBaseCfg.isMasterEncodersPresent) {
+			// clear encoders and set calculated encoder stop values on first call
+		}
+		// equations
+		// powerRight = math.sign(_rotateAngleValue)*kRotatePowerLevel;
+		// powerLeft = -math.sign(_rotateAngleValue)*kRotatePowerLevel;
+		// check heading to _rotateAngleValue to stop or
+		// check encoder stop value to stop
+		return true;
+	}
+	
+	
+	
+	public boolean SRXBaseDriveTurnToAngle(double _turnHeadingValue) {
+		// ToDo
+		return true;
+	}
+	
+	public boolean SRXBaseDriveVelMoveToPosition(double _PwrMoveToPosiitionValue) {
+		// This method moves the robot with a predetermined power level and stops at
+		// the specified position value. The move will be in brake mode to stop
+		// method will check that robot is stopped and set brake mode back to coast and respond
+		// that move is done
+		return true;
+		
+	}
+
+	public void SRXBaseDriveMagicMove(double _rightCruiseVel,
+										double _rightAccel,
+										double _rightDistance,
+										double _leftCruiseVel,
+										double _leftAccel,
+										double _leftDistance) {
+		// This method performs a SRX magic motion command from user calculated values
+		// User should note that the right drive distance needs to be corrected by kDriveStraightCorrection
+		driveRightMasterMtr.changeControlMode(TalonControlMode.MotionMagic);
+		driveRightMasterMtr.setMotionMagicCruiseVelocity(_rightCruiseVel); 
+		driveRightMasterMtr.setMotionMagicAcceleration(_rightAccel); 
+		
+		driveLeftMasterMtr.changeControlMode(TalonControlMode.MotionMagic);
+		driveLeftMasterMtr.setMotionMagicCruiseVelocity(_leftCruiseVel); 
+		driveLeftMasterMtr.setMotionMagicAcceleration(_leftAccel);
+		
+		driveRightMasterMtr.set(_rightDistance);
+		driveLeftMasterMtr.set(_leftDistance);
+		}
+	
+	/*
+	*	CloseLoop velocity Squarewave test for setting up PID values
+	*/
+	/*
+	public void motorSquareWaveTest(bool _rightDrive, boolean _isMtrSquareWaveTestEnabled){
+		if (_isMtrSquareWaveTestEnabled) {
+			
+			// initialize and start at low speed
+			if isSqWaveFnctStartActive {
+				isLowTimeActive = true;
+				isSqWaveFnctStartActive = false;
+				startTimeSec = getFPGATimeStamp(); // seconds
+				
+				// Start square wave at low speed
+				If _rightDrive{
+					driveRightMasterMtr.set(kSquareWaveLowSpeed);
+					driveLeftMasterMtr.set(0);
+				} else{
+					driveLeftMasterMtr.set(kSquareWaveLowSpeed);
+					driveRightMasterMtr.set(0);
+				}
+				
+				
+			}
+			if isLowTimeActive {
+				
+				// Stay at a low speed for klowSQTime ms then switch to high speed
+				If _rightDrive{
+					driveRightMasterMtr.set(kSquareWaveLowSpeed);
+					driveLeftMasterMtr.set(0);
+				} else {
+					driveLeftMasterMtr.set(kSquareWaveLowSpeed);
+					driveRightMasterMtr.set(0)
+				}
+				if (getFPGATimeStamp() - startTimeSec) > kLowSquareWaveTimeSec {
+					
+					// Stop high speed mode
+					isLowTimeActive = false;
+					
+					// Set start time for high speed mode
+					startTimeSec = getFPGATimeStamp();
+				}
+				
+			} else {
+				
+				// Stay at a higg speed for kHighSQTime ms then switch to low speed
+				if _rightDrive{
+					driveRightMasterMtr.set(kRightSideHighSpeed);
+					driveLeftMasterMtr.set(0);
+				} else {
+					driveLeftMasterMtr.set(kleftSideHighSpeed);
+					driveRightMasterMtr.set(0);
+				}
+				if (getFPGATimeStamp() - startTimeSec) > kHighSquareWaveTimeSec{
+
+					// Stop high speed mode
+					isLowTimeActive = true;
+					
+					// Set start time for low speed mode
+					startTimeSec = getFPGATimeStamp();
+				
+				}		
+			} 			
+			SmartDashboard.putNumber("Test Low Speed", kSquareWaveLowSpeed);
+			SmartDashboard.putNumber("Test high Speed", kSquareWaveHighSpeed);
+			if _rightDrive{
+				SmartDashboard.putNumber("Test Right Speed", driveRightMasterMtr.getSpeed());
+				SmartDashboard.putNumber("Test Right Error", driveRightMasterMtr.closelooperror());
+				SmartDashboard.putNumber("Test Left Speed", 0);
+				SmartDashboard.putNumber("Test Left Error", 0);
+			} else {
+				SmartDashboard.putNumber("Test Right Speed", 0);
+				SmartDashboard.putNum ber("Test Right Error", 0);
+				SmartDashboard.putNumber("Test Left Speed", driveLeftMasterMtr.getSpeed());
+				SmartDashboard.putNumber("Test Left Error", driveLeftMasterMtr.closelooperror());
+			}
+			
+		} else {
+			// Reset method flags for next call to motorSquareWaveTest method
+			isLowTimeActive = true;
+			isSqWaveFnctStartActive = true;
+		}
+	}
+*/
 
 }

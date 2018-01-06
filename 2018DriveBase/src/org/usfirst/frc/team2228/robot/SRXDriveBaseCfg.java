@@ -11,14 +11,18 @@ public class SRXDriveBaseCfg {
 		
 		public static double kDriveStraightCorrection = 1.0;
 		
+		public static double kRotatePowerLevel = 0.20;
+		
 		public static boolean isMasterEncodersPresent = false;
 		public static boolean isRightEncoderSensorReversed = false;
 		public static boolean isLeftEncoderSensorReversed = false;
 		
+		public static boolean isIMUEnabled = false;
 		public static boolean isDriveStraightAssistEnabled = false;
-		
+		public static boolean isHeadingModuleEnabled = false;
 		
 		public static boolean isPIDEnabled = false;
+		public static boolean isSRXClosedLoopEnabled = false;
 		
 		public static double kdriveRightMstrFeedForwardGain = 0.025;
 		public static double kdriveRightMstrProportionalGain = 0.3;
@@ -29,6 +33,14 @@ public class SRXDriveBaseCfg {
 		public static double kdriveLeftMstrProportionalGain = 0.3;
 		public static double kdriveLeftMstrIntegralGain = 0;
 		public static double kdriveLeftMstrDerivativeGain = 0;
+		
+		public static double kdriveRightMstrIzone = 0;
+		public static int kdriveRightMstrRampRate = 0;
+		public static double kdriveRightMstrProfile = 0;
+		
+		public static double kdriveleftMstrIzone = 0;
+		public static int kdriveLeftMstrRampRate = 0;
+		public static double kdriveLeftMstrProfile = 0;
 		
 		// magic motion
 		public static double kWheelDiameter = 6.0;
