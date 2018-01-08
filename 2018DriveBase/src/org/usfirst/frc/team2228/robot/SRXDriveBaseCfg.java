@@ -42,6 +42,12 @@ public class SRXDriveBaseCfg {
 		public static int kdriveLeftMstrRampRate = 0;
 		public static double kdriveLeftMstrProfile = 0;
 		
+		public static double kClosedLoopErr = 100;
+		public static double kSRXVelocitySample = 16;
+		public static double kTopRPM = 1000;
+		public static boolean isLowTimeActive = true;
+		public static boolean isSqWaveFnctStartActive = false;
+		
 		// magic motion
 		public static double kWheelDiameter = 6.0;
 		public static double kRgtDistanceCalibration = 1.0;
