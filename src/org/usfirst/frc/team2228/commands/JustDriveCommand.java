@@ -30,7 +30,7 @@ public class JustDriveCommand extends Command {
 	// Called repeatedly when this Command is scheduled to run
 	@Override
 	protected void execute() {
-		drive.setTurnAndThrottle(0, speed);
+		drive.WPISetThrottleTurn(speed, 0);
 		DebugLogger.log("JustDrive sending speed"  + speed);
 	}
 
@@ -43,8 +43,7 @@ public class JustDriveCommand extends Command {
 	// Called once after isFinished returns true
 	@Override
 	protected void end() {
-		drive.setRightPower(0);
-		drive.setLeftPower(0);
+		drive.stopMotors();
 		System.out.println("just drive done");
 	}
 

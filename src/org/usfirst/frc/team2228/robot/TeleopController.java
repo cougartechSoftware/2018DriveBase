@@ -23,7 +23,6 @@ public class TeleopController {
 	}
 	
 	public void teleopInit(){
-		driveBase.enableMasterFollowerControl();
 	}
 	
 	public void teleopPeriodic(){
