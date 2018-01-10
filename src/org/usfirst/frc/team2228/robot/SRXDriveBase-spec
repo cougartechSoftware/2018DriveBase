@@ -45,7 +45,8 @@ issue: I am missing ultrasonic class
 
 -autonomous commands:
 ==========================================================================
-1 move straight to position: power/speed/accel/ramp rate/coast distance - configured; distance by user
+1 velMoveToPosition(double moveInches)
+       move straight to position: power/speed/accel/ramp rate/coast distance - configured; distance by user
 		NOTE: stopping is by coasting with regen braking on motors. If speed and ramp is used we
 		      could get a shorter stopping distance
 

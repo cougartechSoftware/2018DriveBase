@@ -26,7 +26,7 @@ public class TeleopController {
 	}
 	
 	public void teleopPeriodic(){
-	   double origThrottle = joystick.getRawAxis(DriverConfig.throttle) * TeleopControllerCfg.kInvertJoystick;
+	   double origThrottle = joystick.getRawAxis(DriverConfig.throttle);
 	   double origTurn = joystick.getRawAxis(DriverConfig.turn);
 	
 	   double turn = origTurn;
@@ -40,7 +40,7 @@ public class TeleopController {
        turn = AdjustForControllerDeadBand(turn);
 	  // CheckForAdjustSpeedRequest();
 	   
-	   driveBase.setTurnAndThrottle(turn, throttle);
+	   driveBase.WPISetThrottleTurn(throttle / 2, turn / 2);
 	   
 		loggerIterations++;
 		if (loggerIterations >= loggerThreshold)
