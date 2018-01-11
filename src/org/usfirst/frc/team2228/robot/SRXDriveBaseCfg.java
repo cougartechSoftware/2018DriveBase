@@ -9,7 +9,7 @@ public class SRXDriveBaseCfg {
 		
 		public static boolean isBrakeEnabled = false;
 		
-		public static double kDriveStraightCorrection = 1.0;
+		public static double kDriveStraightCorrection = 35.0/30.0;
 		
 		public static double kRotatePowerLevel = 0.20;
 		
@@ -72,8 +72,8 @@ public class SRXDriveBaseCfg {
         public static double kCorrection_Ki = 0;
         public static double kCorrection_Kd = 0;
         
-        public static double kStallCurrent = 0;
-        public static double kStallTimeSec = 0;
+        public static double kStallCurrent = 16.0;
+        public static double kStallTimeSec = 3.0;
         public static double kRobotCoastToStopCounts = 0;
         public static double kMoveToPositionVelCmdLevel = 0.3;
         

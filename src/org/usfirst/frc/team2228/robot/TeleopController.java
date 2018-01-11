@@ -9,6 +9,7 @@ public class TeleopController {
 	// smooth move parameters
 	public double previousEMAValue = 0.0; // -1 to 1
 	public int timePeriodSF =  TeleopControllerCfg.kHighSmoothPeriod;
+	//public boolean stall;
 		// tipping filter
 	protected double smoothFactor = 1.0;
 		
@@ -39,8 +40,15 @@ public class TeleopController {
        throttle = AdjustForControllerDeadBand(throttle);
        turn = AdjustForControllerDeadBand(turn);
 	  // CheckForAdjustSpeedRequest();
+	   driveBase.UpdateSRXDrive();
+	   driveBase.WPISetThrottleTurn(-turn / 2, throttle / 1.5);
+	   //stall = driveBase.StallConditionTimeOut();
 	   
-	   driveBase.WPISetThrottleTurn(throttle / 2, turn / 2);
+	   /*	if(stall = true){
+	   		driveBase.stopMotors();
+	   		System.out.println("Motors stopped");
+	   	}
+	   	*/
 	   
 		loggerIterations++;
 		if (loggerIterations >= loggerThreshold)

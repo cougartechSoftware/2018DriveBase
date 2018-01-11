@@ -279,33 +279,33 @@ public class SRXDriveBase {
 		// Display SRXBaseDrive version
 		SmartDashboard.putString("SRXBaseDrive-Version", VersionString);
 		// Display SRX module values
-		SmartDashboard.putNumber("SRXBaseDrive-Right Bus Voltage", driveRightMasterMtr.getBusVoltage());
-		SmartDashboard.putNumber("SRXBaseDrive-Right Output Voltage", driveRightMasterMtr.getOutputVoltage());
-		SmartDashboard.putNumber("SRXBaseDrive-Current Right Master", driveRightMasterMtr.getOutputCurrent());
-		SmartDashboard.putNumber("SRXBaseDrive-Current Right Follower", driveRightFollowerMtr.getOutputCurrent());
+		SmartDashboard.putNumber("BaseDrive-Right Bus Voltage", driveRightMasterMtr.getBusVoltage());
+		SmartDashboard.putNumber("BaseDrive-Right Output Voltage", driveRightMasterMtr.getOutputVoltage());
+		SmartDashboard.putNumber("BaseDrive-Current Right Master", driveRightMasterMtr.getOutputCurrent());
+		SmartDashboard.putNumber("BaseDrive-Current Right Follower", driveRightFollowerMtr.getOutputCurrent());
 
-		SmartDashboard.putNumber("SRXBaseDrive-Left Bus Voltage", driveLeftMasterMtr.getBusVoltage());
-		SmartDashboard.putNumber("SRXBaseDrive-Left Output Voltage", driveLeftMasterMtr.getOutputVoltage());
-		SmartDashboard.putNumber("SRXBaseDrive-Current Left Master", driveLeftMasterMtr.getOutputCurrent());
-		SmartDashboard.putNumber("SRXBaseDrive-Current Left Follower", driveRightFollowerMtr.getOutputCurrent());
+		SmartDashboard.putNumber("BaseDrive-Left Bus Voltage", driveLeftMasterMtr.getBusVoltage());
+		SmartDashboard.putNumber("BaseDrive-Left Output Voltage", driveLeftMasterMtr.getOutputVoltage());
+		SmartDashboard.putNumber("BaseDrive-Current Left Master", driveLeftMasterMtr.getOutputCurrent());
+		SmartDashboard.putNumber("BaseDrive-Current Left Follower", driveRightFollowerMtr.getOutputCurrent());
 
 		if (SRXDriveBaseCfg.isMasterEncodersPresent) {
-			SmartDashboard.putNumber("SRXBaseDrive-Right Encoder Count", driveRightMasterMtr.getPosition());
-			SmartDashboard.putNumber("SRXBaseDrive-Speed Right", driveRightMasterMtr.getSpeed());
-			SmartDashboard.putNumber("SRXBaseDrive-Left Encoder Count", driveLeftMasterMtr.getPosition());
-			SmartDashboard.putNumber("SRXBaseDrive-Speed Left", driveLeftMasterMtr.getSpeed());
+			SmartDashboard.putNumber("BaseDrive-Right Encoder Count", driveRightMasterMtr.getPosition());
+			SmartDashboard.putNumber("BaseDrive-Speed Right", driveRightMasterMtr.getSpeed());
+			SmartDashboard.putNumber("BaseDrive-Left Encoder Count", driveLeftMasterMtr.getPosition());
+			SmartDashboard.putNumber("BaseDrive-Speed Left", driveLeftMasterMtr.getSpeed());
 		}
 
 		if (SRXDriveBaseCfg.isSRXClosedLoopEnabled) {
-			SmartDashboard.putNumber("SRXBaseDrive-Speed Right ClosedLoopErr",
+			SmartDashboard.putNumber("BaseDrive-Speed Right ClosedLoopErr",
 					driveRightMasterMtr.getClosedLoopError());
-			SmartDashboard.putNumber("SRXBaseDrive-Speed Left ClosedLoopErr", driveLeftMasterMtr.getClosedLoopError());
+			SmartDashboard.putNumber("BaseDrive-Speed Left ClosedLoopErr", driveLeftMasterMtr.getClosedLoopError());
 		}
 
 		if (SRXDriveBaseCfg.isHeadingModuleEnabled) {
 			// Display Inertial Measurement Unit (IMU) values
 			/*
-			 * SmartDashboard.putNumber("SRXBaseDrive-ANGLE NAVX",
+			 * SmartDashboard.putNumber("BaseDrive-ANGLE NAVX",
 			 * imu.getAngle()); SmartDashboard.putNumber("SRXBaseDrive-IMU_Yaw",
 			 * imu.getYaw()); SmartDashboard.putNumber("SRXBaseDrive-IMU_Pitch",
 			 * imu.getPitch());
