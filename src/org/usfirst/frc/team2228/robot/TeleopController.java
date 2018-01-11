@@ -41,6 +41,10 @@ public class TeleopController {
        turn = AdjustForControllerDeadBand(turn);
 	  // CheckForAdjustSpeedRequest();
 	   driveBase.UpdateSRXDrive();
+	   boolean randoLogBoo = true;
+	   if(randoLogBoo = true){
+	   driveBase.logSRXDrive();
+	   }
 	   driveBase.WPISetThrottleTurn(-turn / 2, throttle / 1.5);
 	   //stall = driveBase.StallConditionTimeOut();
 	   

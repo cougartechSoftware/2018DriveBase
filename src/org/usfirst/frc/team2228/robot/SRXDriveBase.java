@@ -273,7 +273,7 @@ public class SRXDriveBase {
 	 * commands
 	 */
 
-	// Reads encoder, velocity, current, error, and displays on smartdashboard
+	// Reads encoder, velocity, current, error, and displays on smartdashboard	
 	public void UpdateSRXDrive() {
 
 		// Display SRXBaseDrive version
@@ -316,6 +316,38 @@ public class SRXDriveBase {
 		// to do
 	}
 
+	public void logSRXDrive(){
+
+
+		// Display SRXBaseDrive version
+		DebugLogger.log("SRXBaseDrive-Version", VersionString);
+		// Display SRX module values
+		DebugLogger.log("BaseDrive-Right Bus Voltage", driveRightMasterMtr.getBusVoltage());
+		DebugLogger.log("BaseDrive-Right Output Voltage", driveRightMasterMtr.getOutputVoltage());
+		DebugLogger.log("BaseDrive-Current Right Master", driveRightMasterMtr.getOutputCurrent());
+		DebugLogger.log("BaseDrive-Current Right Follower", driveRightFollowerMtr.getOutputCurrent());
+
+		DebugLogger.log("BaseDrive-Left Bus Voltage", driveLeftMasterMtr.getBusVoltage());
+		DebugLogger.log("BaseDrive-Left Output Voltage", driveLeftMasterMtr.getOutputVoltage());
+		DebugLogger.log("BaseDrive-Current Left Master", driveLeftMasterMtr.getOutputCurrent());
+		DebugLogger.log("BaseDrive-Current Left Follower", driveRightFollowerMtr.getOutputCurrent());
+
+		if (SRXDriveBaseCfg.isMasterEncodersPresent) {
+			DebugLogger.log("BaseDrive-Right Encoder Count", driveRightMasterMtr.getPosition());
+			DebugLogger.log("BaseDrive-Speed Right", driveRightMasterMtr.getSpeed());
+			DebugLogger.log("BaseDrive-Left Encoder Count", driveLeftMasterMtr.getPosition());
+			DebugLogger.log("BaseDrive-Speed Left", driveLeftMasterMtr.getSpeed());
+		}
+
+		if (SRXDriveBaseCfg.isSRXClosedLoopEnabled) {
+			DebugLogger.log("BaseDrive-Speed Right ClosedLoopErr",
+					driveRightMasterMtr.getClosedLoopError());
+			DebugLogger.log("BaseDrive-Speed Left ClosedLoopErr", driveLeftMasterMtr.getClosedLoopError());
+		}
+	
+		
+	}
+	
 	public double getRightPosition() {
 		return driveRightMasterMtr.getPosition();
 	}
