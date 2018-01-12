@@ -2,86 +2,119 @@ package org.usfirst.frc.team2228.robot;
 
 public class SRXDriveBaseCfg {
 	// configuration flags
+		// ===============================================
+		// SRX ESC MODULE
+		
+		// Set motor direction
 		public static boolean isDriveRightMasterMtrReversed = true;
 		public static boolean isDriveRightFollowerMtrReversed = true;
 		public static boolean isDriveLeftMasterMtrReversed = false;
 		public static boolean isDriveLeftFollowerMtrReversed = false;
 		
+		// sets SRX zero speed brake mode to brake(true) and coast(false)
 		public static boolean isBrakeEnabled = false;
 		
-		public static double kDriveStraightCorrection = 35.0/30.0;
 		
-		public static double kRotatePowerLevel = 0.20;
-		
-		public static boolean isMasterEncodersPresent = false;
-		public static boolean isRightEncoderSensorReversed = false;
-		public static boolean isLeftEncoderSensorReversed = false;
-		
-		public static boolean isIMUEnabled = false;
-		public static boolean isDriveStraightAssistEnabled = false;
-		public static boolean isHeadingModuleEnabled = false;
-		
-		public static boolean isPIDEnabled = false;
+			// SRX Close loop setup parameters
 		public static boolean isSRXClosedLoopEnabled = false;
 		
 		public static double kdriveRightMstrFeedForwardGain = 0.025;
 		public static double kdriveRightMstrProportionalGain = 0.3;
 		public static double kdriveRightMstrIntegralGain = 0;
 		public static double kdriveRightMstrDerivativeGain = 0;
+		public static double kdriveRightMstrIzone = 0;
+		public static int kdriveRightMstrRampRate = 0;
+		public static int kdriveRightMstrProfile = 0;
 		
 		public static double kdriveLeftMstrFeedForwardGain = 0.025;
 		public static double kdriveLeftMstrProportionalGain = 0.3;
 		public static double kdriveLeftMstrIntegralGain = 0;
 		public static double kdriveLeftMstrDerivativeGain = 0;
-		
-		public static double kdriveRightMstrIzone = 0;
-		public static int kdriveRightMstrRampRate = 0;
-		public static int kdriveRightMstrProfile = 0;
-		
 		public static double kdriveleftMstrIzone = 0;
 		public static int kdriveLeftMstrRampRate = 0;
 		public static int kdriveLeftMstrProfile = 0;
 		
 		public static int kClosedLoopErr = 100;
-		public static double kSRXVelocitySample = 16;
-		public static double kTopRPM = 1000;
-		public static boolean isLowTimeActive = true;
-		public static boolean isSqWaveFnctStartActive = false;
 		
-		// magic motion
-		public static double kWheelDiameter = 6.0;
-		public static double kRgtDistanceCalibration = 1.0;
-		public static double kLftDistanceCalibration = 1.0;
-		public static double kCalibratedRgtWheelCircum = kWheelDiameter*Math.PI;
-		public static double kCalibratedLftWheelCircum = kWheelDiameter*Math.PI;
+		// This sets the velocity calculation time sample
+		public static int kSRXVelocitySample = 16;
+		
+		
+		// ======================================
+		// ENCODER PARAMETERS AND ENCODER CALCULATIONS
+		
+		// Encoder setup Parameters
+		public static boolean isMasterEncodersPresent = false;
+		public static boolean isRightEncoderSensorReversed = false;
+		public static boolean isLeftEncoderSensorReversed = false;
+		
 		// AndyMark tough box mini 14:50 to 16:48
-		public static double kGearBoxRatio = (50.0/14.0)*(48.0/16.0);
-		public static double kCountsPerRevolution = 80.0 * kGearBoxRatio;
+		public static double kGearRatio = (50.0/14.0)*(48.0/16.0);
+		
+		public static double kWheelDiameterIn = 6.0;
+		public static double kTrackWidthIn = 0;
+		
+		// CTRE CIMcode magnetic quadrature 20 cycles per revolution
+		public static int kDriveRightEncoderCyclesPerRev = 20 * (int)kGearRatio;
+		public static int kDriveLefttEncoderCyclesPerRev = 20 * (int)kGearRatio;
+		
+		
+		public static double kCalibratedRgtWheelCircum = kWheelDiameterIn*Math.PI;
+		public static double kCalibratedLftWheelCircum = kWheelDiameterIn*Math.PI;
 
-		// CTRE CIMcode magnetic quadrature 20 pulse per revolution
-		public static int DRIVE_RIGHT_ENCODER_CNTS_PER_REV = 20 * (int)kGearBoxRatio;
-		public static int DRIVE_LEFT_ENCODER_CNTS_PER_REV = 20 * (int)kGearBoxRatio;
 		
 		// inches per revolution / counts per revolution
+		public static double kCountsPerRevolution = 214;
 		public static double kRgtInchesPerCount = kCalibratedRgtWheelCircum/kCountsPerRevolution;
 		public static double kLftInchesPerCount = kCalibratedRgtWheelCircum/kCountsPerRevolution;
+		public static double kLeftEncoderCountsPerIn = 1 / kLftInchesPerCount;
+		public static double kRightEncoderCountsPerIn = 1 / kRgtInchesPerCount;
         public static double kSpeedDeadBand = 0.1;
-        
-        public static double kTurnValueDeadBand = 0;
+		
+		//=======================================================
+		// DRIVING STRAIGHT
+		
+		// Driving straight setup parameters
+		public static boolean isDriveStraightAssistEnabled = false;
+		public static double kDriveStraightCorrection = 35.0/30.0;
+		public static boolean isHeadingModuleEnabled = false;
+		
+		// Driving straight setup parameters
+		public static double kTurnValueDeadBand = 0;
         public static double kCorrection_Kp = 0;
         public static double kCorrection_Ki = 0;
         public static double kCorrection_Kd = 0;
-        
+		
+		//===============================================
+		//MOTION METHOD PARAMETERS
+		
+		public static double kRotatePowerLevel = 0.20;
+		// See topRPM calibration for this parameter
+		public static double kTopRPM = 1000;
+		
+		// Drive train stall paramters
         public static double kStallCurrent = 16.0;
         public static double kStallTimeSec = 3.0;
-        public static double kRobotCoastToStopCounts = 0;
+		
+		public static double kRobotCoastToStopCounts = 0;
         public static double kMoveToPositionVelCmdLevel = 0.3;
-        
         public static double kDrivePerpendicularCmdLevel = 0;
-        public static double kTrackWidthIn = 0;
         public static double kturnCmdLevel = 0;
-        public static double kSquareWaveLowerSpeed = 0;
+        
+		// ==========================================
+		// TEST METHOD PARAMETERS
+		
+		public static boolean isLowTimeActive = true;
+		public static boolean isSqWaveFnctStartActive = false;
+		public static double kSquareWaveLowerSpeed = 0;
         public static double kSquareWaveHigherSpeed = 0;
+		
+		//===============================================
+		// MAGIC MOTION SETUP PARAMETERS
+		
+		public static double kRgtDistanceCalibration = 1.0;
+		public static double kLftDistanceCalibration = 1.0;
+		
 }
 
 /*
