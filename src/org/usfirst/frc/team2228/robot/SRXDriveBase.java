@@ -252,7 +252,11 @@ public class SRXDriveBase {
 	 */
 
 	// Reads encoder, velocity, current, error, and displays on smartdashboard	
-	public void UpdateSRXDrive() {
+	public void DisplayChangeParmeters() {
+		SmartDashboard.putNumber("Right Correction Factor", SRXDriveBaseCfg.kDriveStraightCorrection);
+}
+	
+	public void UpdateSRXDriveDataDisplay() {
 
 		// Display SRXBaseDrive version
 		SmartDashboard.putString("SRXBaseDrive-Version", VersionString);
@@ -267,9 +271,9 @@ public class SRXDriveBase {
 		SmartDashboard.putNumber("BaseDrive-Current Left Follower", driveRightFollowerMtr.getOutputCurrent());
 
 		if (SRXDriveBaseCfg.isMasterEncodersPresent) {
-			SmartDashboard.putNumber("BaseDrive-Right Encoder Count", driveRightMasterMtr.getPosition());
+			SmartDashboard.putNumber("BaseDrive-Right Encoder Count", driveRightMasterMtr.getEncPosition());
 			SmartDashboard.putNumber("BaseDrive-Speed Right", driveRightMasterMtr.getSpeed());
-			SmartDashboard.putNumber("BaseDrive-Left Encoder Count", driveLeftMasterMtr.getPosition());
+			SmartDashboard.putNumber("BaseDrive-Left Encoder Count", driveLeftMasterMtr.getEncPosition());
 			SmartDashboard.putNumber("BaseDrive-Speed Left", driveLeftMasterMtr.getSpeed());
 		}
 
@@ -293,37 +297,37 @@ public class SRXDriveBase {
 		// to do
 	}
 
-	public void logSRXDrive(){
-
-
-		// Display SRXBaseDrive version
-		DebugLogger.log("SRXBaseDrive-Version", VersionString);
-		// Display SRX module values
-		DebugLogger.log("BaseDrive-Right Bus Voltage", driveRightMasterMtr.getBusVoltage());
-		DebugLogger.log("BaseDrive-Right Output Voltage", driveRightMasterMtr.getOutputVoltage());
-		DebugLogger.log("BaseDrive-Current Right Master", driveRightMasterMtr.getOutputCurrent());
-		DebugLogger.log("BaseDrive-Current Right Follower", driveRightFollowerMtr.getOutputCurrent());
-
-		DebugLogger.log("BaseDrive-Left Bus Voltage", driveLeftMasterMtr.getBusVoltage());
-		DebugLogger.log("BaseDrive-Left Output Voltage", driveLeftMasterMtr.getOutputVoltage());
-		DebugLogger.log("BaseDrive-Current Left Master", driveLeftMasterMtr.getOutputCurrent());
-		DebugLogger.log("BaseDrive-Current Left Follower", driveRightFollowerMtr.getOutputCurrent());
-
-		if (SRXDriveBaseCfg.isMasterEncodersPresent) {
-			DebugLogger.log("BaseDrive-Right Encoder Count", driveRightMasterMtr.getPosition());
-			DebugLogger.log("BaseDrive-Speed Right", driveRightMasterMtr.getSpeed());
-			DebugLogger.log("BaseDrive-Left Encoder Count", driveLeftMasterMtr.getPosition());
-			DebugLogger.log("BaseDrive-Speed Left", driveLeftMasterMtr.getSpeed());
-		}
-
-		if (SRXDriveBaseCfg.isSRXClosedLoopEnabled) {
-			DebugLogger.log("BaseDrive-Speed Right ClosedLoopErr",
-					driveRightMasterMtr.getClosedLoopError());
-			DebugLogger.log("BaseDrive-Speed Left ClosedLoopErr", driveLeftMasterMtr.getClosedLoopError());
-		}
-	
-		
-	}
+//	public void logSRXDrive(){
+//
+//
+//		// Display SRXBaseDrive version
+//		DebugLogger.log("SRXBaseDrive-Version", VersionString);
+//		// Display SRX module values
+//		DebugLogger.log("BaseDrive-Right Bus Voltage", driveRightMasterMtr.getBusVoltage());
+//		DebugLogger.log("BaseDrive-Right Output Voltage", driveRightMasterMtr.getOutputVoltage());
+//		DebugLogger.log("BaseDrive-Current Right Master", driveRightMasterMtr.getOutputCurrent());
+//		DebugLogger.log("BaseDrive-Current Right Follower", driveRightFollowerMtr.getOutputCurrent());
+//
+//		DebugLogger.log("BaseDrive-Left Bus Voltage", driveLeftMasterMtr.getBusVoltage());
+//		DebugLogger.log("BaseDrive-Left Output Voltage", driveLeftMasterMtr.getOutputVoltage());
+//		DebugLogger.log("BaseDrive-Current Left Master", driveLeftMasterMtr.getOutputCurrent());
+//		DebugLogger.log("BaseDrive-Current Left Follower", driveRightFollowerMtr.getOutputCurrent());
+//
+//		if (SRXDriveBaseCfg.isMasterEncodersPresent) {
+//			DebugLogger.log("BaseDrive-Right Encoder Count", driveRightMasterMtr.getPosition());
+//			DebugLogger.log("BaseDrive-Speed Right", driveRightMasterMtr.getSpeed());
+//			DebugLogger.log("BaseDrive-Left Encoder Count", driveLeftMasterMtr.getPosition());
+//			DebugLogger.log("BaseDrive-Speed Left", driveLeftMasterMtr.getSpeed());
+//		}
+//
+//		if (SRXDriveBaseCfg.isSRXClosedLoopEnabled) {
+//			DebugLogger.log("BaseDrive-Speed Right ClosedLoopErr",
+//					driveRightMasterMtr.getClosedLoopError());
+//			DebugLogger.log("BaseDrive-Speed Left ClosedLoopErr", driveLeftMasterMtr.getClosedLoopError());
+//		}
+//	
+//		
+//	}
 	
 	public double getRightPosition() {
 		return driveRightMasterMtr.getEncPosition();
@@ -815,7 +819,7 @@ public class SRXDriveBase {
 			rightCmdLevel = _pwrLevel * SRXDriveBaseCfg.kDriveStraightCorrection;
 			setRightPositionToZero();
 			setLeftPositionToZero();
-		} else if ((int)getLeftPosition() > leftEncoderCounts) {
+		} else if (-(int)getLeftPosition() > leftEncoderCounts) {
 			isTestMoveForStraightCalActive = false;
 			rightCmdLevel = 0;
 			leftCmdLevel = 0;
@@ -824,10 +828,11 @@ public class SRXDriveBase {
 		driveRightMasterMtr.set(leftCmdLevel);
 		
 		// Display encoders
-		if (testMoveCycleCnt % 4 == 0) {
-			//String outputString = String.format("StopCnt:%8d LftEnc:%8d RgtEnc:%8d", leftEncoderCounts, getLeftPosition(), getRightPosition());
-			System.out.printf("StopCnt:%8d LftEnc:%8d RgtEnc:%8d", leftEncoderCounts, getLeftPosition(), getRightPosition());
-		}
+//		if (testMoveCycleCnt % 4 == 0) {
+//			//String outputString = String.format("StopCnt:%8d LftEnc:%8d RgtEnc:%8d", leftEncoderCounts, getLeftPosition(), getRightPosition());
+			System.out.printf("StopCnt:%8d LftEnc:%8.0f RgtEnc:%8.0f%n", leftEncoderCounts, getLeftPosition(), getRightPosition());
+//		}
+//		++testMoveCycleCnt;
 		return isTestMoveForStraightCalActive;
 	} 
 	

@@ -12,7 +12,7 @@ public class SRXDriveBaseCfg {
 		public static boolean isDriveLeftFollowerMtrReversed = false;
 		
 		// sets SRX zero speed brake mode to brake(true) and coast(false)
-		public static boolean isBrakeEnabled = false;
+		public static boolean isBrakeEnabled = true;
 		
 		
 			// SRX Close loop setup parameters
@@ -44,9 +44,9 @@ public class SRXDriveBaseCfg {
 		// ENCODER PARAMETERS AND ENCODER CALCULATIONS
 		
 		// Encoder setup Parameters
-		public static boolean isMasterEncodersPresent = false;
-		public static boolean isRightEncoderSensorReversed = false;
-		public static boolean isLeftEncoderSensorReversed = false;
+		public static boolean isMasterEncodersPresent = true;
+		public static boolean isRightEncoderSensorReversed = true;
+		public static boolean isLeftEncoderSensorReversed = true;
 		
 		// AndyMark tough box mini 14:50 to 16:48
 		public static double kGearRatio = (50.0/14.0)*(48.0/16.0);
@@ -64,7 +64,7 @@ public class SRXDriveBaseCfg {
 
 		
 		// inches per revolution / counts per revolution
-		public static double kCountsPerRevolution = 214;
+		public static double kCountsPerRevolution = 4*kDriveLefttEncoderCyclesPerRev;
 		public static double kRgtInchesPerCount = kCalibratedRgtWheelCircum/kCountsPerRevolution;
 		public static double kLftInchesPerCount = kCalibratedRgtWheelCircum/kCountsPerRevolution;
 		public static double kLeftEncoderCountsPerIn = 1 / kLftInchesPerCount;

@@ -10,6 +10,8 @@ public class TeleopController {
 	// smooth move parameters
 	public double previousEMAValue = 0.0; // -1 to 1
 	public int timePeriodSF = TeleopControllerCfg.kHighSmoothPeriod;
+	public boolean lastButtonRead = false, isButtonCmdActive = false;
+	
 	// public boolean stall;
 	// tipping filter
 	protected double smoothFactor = 1.0;
@@ -34,21 +36,26 @@ public class TeleopController {
 
 		turn = CheckTurnSensitivityFilter(limit(turn));
 		throttle = CheckThrottleSensitivity(limit(throttle));
-		throttle = CheckSmoothMove(limit(throttle));
+		//throttle = CheckSmoothMove(limit(throttle));
 
 		throttle = AdjustForControllerDeadBand(throttle);
 		turn = AdjustForControllerDeadBand(turn);
 		// CheckForAdjustSpeedRequest();
-		driveBase.UpdateSRXDrive();
-		
-		if(joystick.getRawButton(XBoxConfig.A_BUTTON)){
-			driveBase.testDriveStraightCalibration(20, .2);
-			
+		driveBase.UpdateSRXDriveDataDisplay();
+		driveBase.DisplayChangeParmeters();
+		if(!joystick.getRawButton(XBoxConfig.A_BUTTON) && lastButtonRead){
+				isButtonCmdActive = true;
 		}
+		else if(isButtonCmdActive){
+			if(!driveBase.testDriveStraightCalibration(20, .3)){
+				isButtonCmdActive = false;
+			}
+		}
+		lastButtonRead = joystick.getRawButton(XBoxConfig.A_BUTTON);
 		
-		boolean randoLogBoo = true;
+		boolean randoLogBoo = false;
 		if (randoLogBoo = true) {
-			driveBase.logSRXDrive();
+//			driveBase.logSRXDrive();
 		}
 		driveBase.WPISetThrottleTurn(-turn / 2, throttle / 1.5);
 		// boolean stall = driveBase.StallConditionTimeOut();
@@ -61,7 +68,7 @@ public class TeleopController {
 		loggerIterations++;
 		if (loggerIterations >= loggerThreshold) {
 
-			DebugLogger.log(origThrottle + "," + origTurn + "," + throttle + "," + turn);
+			//DebugLogger.log(origThrottle + "," + origTurn + "," + throttle + "," + turn);
 		}
 	}
 
