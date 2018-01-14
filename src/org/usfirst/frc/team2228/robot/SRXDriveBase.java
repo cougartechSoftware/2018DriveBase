@@ -236,11 +236,11 @@ public class SRXDriveBase {
 	}
 
 	public void setRightPositionToZero() {
-		driveRightMasterMtr.setPosition(0);
+		driveRightMasterMtr.setEncPosition(0);
 	}
 
 	public void setLeftPositionToZero() {
-		driveLeftMasterMtr.setPosition(0);
+		driveLeftMasterMtr.setEncPosition(0);
 
 	}
 
@@ -554,10 +554,9 @@ public class SRXDriveBase {
 			setLeftPositionToZero();
 			isVelMoveToPositionActive = true;
 			setBrakeMode(false);
-			moveCounts = (_MoveToPositionIn * SRXDriveBaseCfg.kLeftEncoderCountsPerIn)
-					- SRXDriveBaseCfg.kRobotCoastToStopCounts;
+			moveCounts = _MoveToPositionIn/* * SRXDriveBaseCfg.kRobotCoastToStopCounts*/ * SRXDriveBaseCfg.kLeftEncoderCountsPerIn;
 			leftCmdLevel = SRXDriveBaseCfg.kMoveToPositionVelCmdLevel;
-			rightCmdLevel = SRXDriveBaseCfg.kMoveToPositionVelCmdLevel; //* SRXDriveBaseCfg.kDriveStraightCorrection;
+			rightCmdLevel = SRXDriveBaseCfg.kMoveToPositionVelCmdLevel * SRXDriveBaseCfg.kDriveStraightCorrection;
 			if (SRXDriveBaseCfg.isSRXClosedLoopEnabled) {
 				rightCmdLevel *= SRXDriveBaseCfg.kTopRPM;
 				leftCmdLevel *= SRXDriveBaseCfg.kTopRPM;

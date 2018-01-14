@@ -76,7 +76,7 @@ public class SRXDriveBaseCfg {
 		
 		// Driving straight setup parameters
 		public static boolean isDriveStraightAssistEnabled = false;
-		public static double kDriveStraightCorrection = 35.0/30.0;
+		public static double kDriveStraightCorrection = 33.0/30.0;
 		public static boolean isHeadingModuleEnabled = false;
 		
 		// Driving straight setup parameters
@@ -96,7 +96,7 @@ public class SRXDriveBaseCfg {
         public static double kStallCurrent = 16.0;
         public static double kStallTimeSec = 3.0;
 		
-		public static double kRobotCoastToStopCounts = 0;
+		public static double kRobotCoastToStopCounts = 1.45;
         public static double kMoveToPositionVelCmdLevel = 0.3;
         public static double kDrivePerpendicularCmdLevel = 0;
         public static double kturnCmdLevel = 0;

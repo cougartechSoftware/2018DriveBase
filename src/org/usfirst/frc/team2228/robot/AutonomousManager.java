@@ -11,7 +11,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class AutonomousManager {
-	boolean isButtonCmdActive = true;
+	boolean isButtonCmdActive;
 	private SRXDriveBase driveBase;
     String autoSelected;
     SendableChooser autoChooser;
@@ -37,6 +37,7 @@ public class AutonomousManager {
 	public void autonomousInit(SRXDriveBase _driveBase) {
 		driveBase = _driveBase;
 		driveBase.setLeftPositionToZero();
+		isButtonCmdActive = true;
 		autoSelected = (String) autoChooser.getSelected();
 		System.out.println("Auto selected: " + autoSelected);
 		Scheduler scheduler = Scheduler.getInstance();
@@ -75,7 +76,7 @@ public class AutonomousManager {
 	public void AutoPeriodic(SRXDriveBase _driveBase){
 		driveBase = _driveBase;
 		if (isButtonCmdActive) {
-			if (!driveBase.velMoveToPosition(40.0, false)) {
+			if (!driveBase.velMoveToPosition(120.0, false)) {
 				isButtonCmdActive = false;
 				System.out.println("Stop moving forwards!!!!");
 			}
