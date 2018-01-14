@@ -67,8 +67,8 @@ public class SRXDriveBaseCfg {
 		public static double kCountsPerRevolution = 4*kDriveLefttEncoderCyclesPerRev;
 		public static double kRgtInchesPerCount = kCalibratedRgtWheelCircum/kCountsPerRevolution;
 		public static double kLftInchesPerCount = kCalibratedRgtWheelCircum/kCountsPerRevolution;
-		public static double kLeftEncoderCountsPerIn = 1 / kLftInchesPerCount;
-		public static double kRightEncoderCountsPerIn = 1 / kRgtInchesPerCount;
+		public static double kLeftEncoderCountsPerIn = 1.0 / kLftInchesPerCount;
+		public static double kRightEncoderCountsPerIn = 1.0 / kRgtInchesPerCount;
         public static double kSpeedDeadBand = 0.1;
 		
 		//=======================================================
@@ -92,7 +92,7 @@ public class SRXDriveBaseCfg {
 		// See topRPM calibration for this parameter
 		public static double kTopRPM = 1000;
 		
-		// Drive train stall paramters
+		// Drive train stall parameters
         public static double kStallCurrent = 16.0;
         public static double kStallTimeSec = 3.0;
 		

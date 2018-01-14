@@ -11,12 +11,15 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class AutonomousManager {
+	boolean isButtonCmdActive = true;
+	private SRXDriveBase driveBase;
     String autoSelected;
     SendableChooser autoChooser;
 	Command autonomousCommand = null;
     final String defaultAuto = "Default";
     final String customAuto = "Custom Auto";
     final String anotherAuto = "Another Auto";
+    final String driveStraightCalibration = "Drive Straight!";
 	
 	SRXDriveBase drive;
 	
@@ -27,14 +30,17 @@ public class AutonomousManager {
 		autoChooser.addDefault("Default Auto", defaultAuto);
 		autoChooser.addObject("Custom Auto", customAuto);
 		autoChooser.addObject("Another Auto", anotherAuto);
+		autoChooser.addObject("Drive Straight Calibration", driveStraightCalibration);
 	    SmartDashboard.putData("Auto choices", autoChooser);
 	}
 		
-	public void autonomousInit() {
+	public void autonomousInit(SRXDriveBase _driveBase) {
+		driveBase = _driveBase;
+		driveBase.setLeftPositionToZero();
 		autoSelected = (String) autoChooser.getSelected();
 		System.out.println("Auto selected: " + autoSelected);
 		Scheduler scheduler = Scheduler.getInstance();
-
+		
 		DebugLogger.log("autoInit");
 		
 	    switch (autoSelected) {
@@ -55,12 +61,25 @@ public class AutonomousManager {
 		default:
 			autonomousCommand = new StringCommand("doNothing!");
 			break;
+		case driveStraightCalibration:
+			autonomousCommand = new StringCommand("drive straight!");
+			break;
 		}
 	
 	// schedule the autonomous command (example)
 	
 	if (autonomousCommand != null)
 	   autonomousCommand.start();
+	}
+	
+	public void AutoPeriodic(SRXDriveBase _driveBase){
+		driveBase = _driveBase;
+		if (isButtonCmdActive) {
+			if (!driveBase.velMoveToPosition(40.0, false)) {
+				isButtonCmdActive = false;
+				System.out.println("Stop moving forwards!!!!");
+			}
+		}
 	}
 	
     public void killAuto(){

@@ -68,7 +68,7 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousInit() {
-		autoMgr.autonomousInit();
+		autoMgr.autonomousInit(driveBase);
 	}
 
 	/**
@@ -77,6 +77,7 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void autonomousPeriodic() {
 		Scheduler.getInstance().run();
+		autoMgr.AutoPeriodic(driveBase);
 	}
 	
 	public void teleopInit() {

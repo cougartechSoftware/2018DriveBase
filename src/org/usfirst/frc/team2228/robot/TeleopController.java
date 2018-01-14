@@ -11,7 +11,7 @@ public class TeleopController {
 	public double previousEMAValue = 0.0; // -1 to 1
 	public int timePeriodSF = TeleopControllerCfg.kHighSmoothPeriod;
 	public boolean lastButtonRead = false, isButtonCmdActive = false;
-	
+
 	// public boolean stall;
 	// tipping filter
 	protected double smoothFactor = 1.0;
@@ -36,26 +36,42 @@ public class TeleopController {
 
 		turn = CheckTurnSensitivityFilter(limit(turn));
 		throttle = CheckThrottleSensitivity(limit(throttle));
-		//throttle = CheckSmoothMove(limit(throttle));
+		// throttle = CheckSmoothMove(limit(throttle));
 
 		throttle = AdjustForControllerDeadBand(throttle);
 		turn = AdjustForControllerDeadBand(turn);
 		// CheckForAdjustSpeedRequest();
 		driveBase.UpdateSRXDriveDataDisplay();
 		driveBase.DisplayChangeParmeters();
-		if(!joystick.getRawButton(XBoxConfig.A_BUTTON) && lastButtonRead){
-				isButtonCmdActive = true;
-		}
-		else if(isButtonCmdActive){
-			if(!driveBase.testDriveStraightCalibration(20, .3)){
-				isButtonCmdActive = false;
-			}
-		}
-		lastButtonRead = joystick.getRawButton(XBoxConfig.A_BUTTON);
-		
+
+		// Pressing the A button causes a calibration method for driving
+		// straight
+//		SmartDashboard.getNumber("Right Correction Factor", SRXDriveBaseCfg.kDriveStraightCorrection);
+//		if (!joystick.getRawButton(XBoxConfig.A_BUTTON) && lastButtonRead) {
+//			isButtonCmdActive = true;
+//
+//		} else if (isButtonCmdActive) {
+//			if (!driveBase.testDriveStraightCalibration(40.0, .5)) {
+//				isButtonCmdActive = false;
+//			}
+//		}
+//		lastButtonRead = joystick.getRawButton(XBoxConfig.A_BUTTON);
+//
+//		// Pressing the B button causes a different calibration method for
+//		// driving straight
+//		if (!joystick.getRawButton(XBoxConfig.B_BUTTON) && lastButtonRead) {
+//			isButtonCmdActive = true;
+//
+//		} else if (isButtonCmdActive) {
+//			if (!driveBase.velMoveToPosition(40.0, false)) {
+//				isButtonCmdActive = false;
+//			}
+//		}
+//		lastButtonRead = joystick.getRawButton(XBoxConfig.B_BUTTON);
+
 		boolean randoLogBoo = false;
-		if (randoLogBoo = true) {
-//			driveBase.logSRXDrive();
+		if (randoLogBoo == true) {
+			driveBase.logSRXDrive();
 		}
 		driveBase.WPISetThrottleTurn(-turn / 2, throttle / 1.5);
 		// boolean stall = driveBase.StallConditionTimeOut();
@@ -68,7 +84,8 @@ public class TeleopController {
 		loggerIterations++;
 		if (loggerIterations >= loggerThreshold) {
 
-			//DebugLogger.log(origThrottle + "," + origTurn + "," + throttle + "," + turn);
+			// DebugLogger.log(origThrottle + "," + origTurn + "," + throttle +
+			// "," + turn);
 		}
 	}
 
