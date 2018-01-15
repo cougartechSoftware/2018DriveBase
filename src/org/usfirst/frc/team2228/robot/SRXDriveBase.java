@@ -26,9 +26,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class SRXDriveBase {
 	private String VersionString = "Release 1, RevC 180108";
-	double moveCounts = 0;
 
 	// cheesy or tank motors
+	private double startTime = 0;
 	private CANTalon driveRightMasterMtr;
 	private CANTalon driveRightFollowerMtr;
 	private CANTalon driveLeftMasterMtr;
@@ -38,13 +38,14 @@ public class SRXDriveBase {
 	private RobotDrive driveStyle;
 	// private AHRSSensor robotHeading;
 	// private UltrasonicSensor distanceSensor;
-	private int leftEncoderCounts = 0;
-	private int testMoveCycleCnt = 1;
+	private double leftEncoderCounts = 0;
+	private int CycleCount = 1;
 	private boolean isDriveMoving;
 	private double rightDrvTrainTargetPosSetPt;
 	private double leftDrvTrainTargetPosSetPt;
 	private double leftCmdLevel = 0;
 	private double rightCmdLevel = 0;
+	private double rotationEncoderCount = 0;
 	private double driveDirectionCorrection;
 
 	// Program flow switches
@@ -58,16 +59,14 @@ public class SRXDriveBase {
 	private boolean isSqWaveFnctStartActive = false;
 	private boolean isMovePerpendicularActive = false;
 	private boolean isTestMoveForStraightCalActive = false;
+	private boolean isDelayActive = false;
+	
 	private double integral = 0;
 	private double previousError = 0;
 	private double previousTime = 0;
 	private double previousTimeSec;
+
 	private double startStallTimerSec = 0;
-
-	// inches per revolution / counts per revolution
-	// cnts per rev = quadature(4) * encoder square wave cycles per rev
-	public double kCountsPerRevolution = 4 * SRXDriveBaseCfg.kCountsPerRevolution;
-
 	// SRXDriveBase Class Constructor
 	public SRXDriveBase() {
 
@@ -139,11 +138,11 @@ public class SRXDriveBase {
 		if (SRXDriveBaseCfg.isMasterEncodersPresent) {
 			driveRightMasterMtr.setFeedbackDevice(FeedbackDevice.QuadEncoder);
 			driveRightMasterMtr.reverseSensor(SRXDriveBaseCfg.isRightEncoderSensorReversed);
-			driveRightMasterMtr.configEncoderCodesPerRev(SRXDriveBaseCfg.kDriveRightEncoderCyclesPerRev);
+			driveRightMasterMtr.configEncoderCodesPerRev(SRXDriveBaseCfg.kDriveEncoderCyclesPerRev);
 
 			driveLeftMasterMtr.setFeedbackDevice(FeedbackDevice.QuadEncoder);
 			driveLeftMasterMtr.reverseSensor(SRXDriveBaseCfg.isLeftEncoderSensorReversed);
-			driveLeftMasterMtr.configEncoderCodesPerRev(SRXDriveBaseCfg.kDriveLefttEncoderCyclesPerRev);
+			driveLeftMasterMtr.configEncoderCodesPerRev(SRXDriveBaseCfg.kDriveEncoderCyclesPerRev);
 		}
 
 		/*
@@ -164,7 +163,7 @@ public class SRXDriveBase {
 			}
 			// imu.zeroYaw();
 		}
-
+		
 		// Create drive for WPI arcade usage
 		driveStyle = new RobotDrive(driveRightMasterMtr, driveLeftMasterMtr);
 
@@ -177,11 +176,11 @@ public class SRXDriveBase {
 		driveLeftFollowerMtr.clearStickyFaults();
 
 	}
-
-	/*
-	 * ================================================================
-	 * SRXDriveBase commands
-	 */
+	/**
+	* =======================================================================================
+	* SRXBaseDrive SET METHODS
+	* =======================================================================================
+	*/
 
 	public void setSRXPercentVbusMode() {
 		// Set Right master to percentVbus mode
@@ -235,12 +234,21 @@ public class SRXDriveBase {
 
 	}
 
-	public void setRightPositionToZero() {
+	public void setRightEncPositionToZero() {
 		driveRightMasterMtr.setEncPosition(0);
 	}
 
-	public void setLeftPositionToZero() {
+	public void setLeftEncPositionToZero() {
 		driveLeftMasterMtr.setEncPosition(0);
+
+	}
+	
+	public void setRightPositionToZero() {
+		driveRightMasterMtr.setPosition(0);
+	}
+
+	public void setLeftPositionToZero() {
+		driveLeftMasterMtr.setPosition(0);
 
 	}
 
@@ -250,17 +258,18 @@ public class SRXDriveBase {
 		driveLeftMasterMtr.enableBrakeMode(isBrakeEnabled);
 		driveLeftFollowerMtr.enableBrakeMode(isBrakeEnabled);
 	}
-
-	/*
-	 * ===================================================== SRXDriveBase status
-	 * commands
-	 */
-
-	// Reads encoder, velocity, current, error, and displays on smartDashboard
+	/**
+	* =======================================================================================
+	* STATUS METHODS
+	* =======================================================================================
+	*/
+	
+		
 	public void DisplayChangeParmeters() {
 		SmartDashboard.putNumber("Right Correction Factor", SRXDriveBaseCfg.kDriveStraightCorrection);
 	}
-
+	
+	// Reads encoder, velocity, current, error, and displays on smartdashboard
 	public void UpdateSRXDriveDataDisplay() {
 
 		// Display SRXBaseDrive version
@@ -283,16 +292,17 @@ public class SRXDriveBase {
 		}
 
 		if (SRXDriveBaseCfg.isSRXClosedLoopEnabled) {
-			SmartDashboard.putNumber("BaseDrive-Speed Right ClosedLoopErr", driveRightMasterMtr.getClosedLoopError());
+			SmartDashboard.putNumber("BaseDrive-Speed Right ClosedLoopErr",
+					driveRightMasterMtr.getClosedLoopError());
 			SmartDashboard.putNumber("BaseDrive-Speed Left ClosedLoopErr", driveLeftMasterMtr.getClosedLoopError());
 		}
 
 		if (SRXDriveBaseCfg.isHeadingModuleEnabled) {
 			// Display Inertial Measurement Unit (IMU) values
 			/*
-			 * SmartDashboard.putNumber("BaseDrive-ANGLE NAVX", imu.getAngle());
-			 * SmartDashboard.putNumber("SRXBaseDrive-IMU_Yaw", imu.getYaw());
-			 * SmartDashboard.putNumber("SRXBaseDrive-IMU_Pitch",
+			 * SmartDashboard.putNumber("BaseDrive-ANGLE NAVX",
+			 * imu.getAngle()); SmartDashboard.putNumber("SRXBaseDrive-IMU_Yaw",
+			 * imu.getYaw()); SmartDashboard.putNumber("SRXBaseDrive-IMU_Pitch",
 			 * imu.getPitch());
 			 * SmartDashboard.putNumber("SRXBaseDrive-IMU_Roll", imu.getRoll());
 			 */
@@ -301,7 +311,8 @@ public class SRXDriveBase {
 		// to do
 	}
 
-	public void logSRXDrive() {
+	public void logSRXDrive(){
+
 
 		// Display SRXBaseDrive version
 		DebugLogger.log("SRXBaseDrive-Version", VersionString);
@@ -324,16 +335,26 @@ public class SRXDriveBase {
 		}
 
 		if (SRXDriveBaseCfg.isSRXClosedLoopEnabled) {
-			DebugLogger.log("BaseDrive-Speed Right ClosedLoopErr", driveRightMasterMtr.getClosedLoopError());
+			DebugLogger.log("BaseDrive-Speed Right ClosedLoopErr",
+					driveRightMasterMtr.getClosedLoopError());
 			DebugLogger.log("BaseDrive-Speed Left ClosedLoopErr", driveLeftMasterMtr.getClosedLoopError());
 		}
-
+	
+		
 	}
 
-	public double getRightPosition() {
+	public double getRightEncoder(){
 		return driveRightMasterMtr.getEncPosition();
 	}
-
+	
+	public double getRightEncoderPosition() {
+		if (SRXDriveBaseCfg.isRightEncoderSensorReversed){
+			return -driveRightMasterMtr.getEncPosition();
+		} else{
+			return driveRightMasterMtr.getEncPosition();
+		}
+	}
+	
 	public double getRightMstrMtrCurrent() {
 		return driveRightMasterMtr.getOutputCurrent();
 	}
@@ -349,11 +370,17 @@ public class SRXDriveBase {
 	public double getRightCloseLoopError() {
 		return driveRightMasterMtr.getClosedLoopError();
 	}
-
-	public double getLeftPosition() {
+	
+	public double getLeftEncoder() {
 		return driveLeftMasterMtr.getEncPosition();
 	}
-
+	public double getLeftEncoderPosition() {
+		if (SRXDriveBaseCfg.isLeftEncoderSensorReversed){
+			return -driveLeftMasterMtr.getEncPosition();
+		} else{
+			return driveLeftMasterMtr.getEncPosition();
+		}
+	}
 	public double getLeftMstrMtrCurrent() {
 		return driveLeftMasterMtr.getOutputCurrent();
 	}
@@ -373,16 +400,15 @@ public class SRXDriveBase {
 	public double getBusVoltage() {
 		return driveLeftMasterMtr.getBusVoltage();
 	}
-
+	/**
+	* =======================================================================================
+	* TELEOP METHODS
+	* =======================================================================================
+	*/
 	/*
-	 * ========================================================= Teleop Motion
-	 * Commands
-	 *
 	 * Note: left drive is master drive axis for the robot - the right drive
 	 * will be modified for driving straight
-	 */
-
-	/*
+	 *
 	 * NOTE: Motion command with open loop reflect power levels (-1 to 1) * (the
 	 * motor bus voltage). Motion command with closed loop reflect speed level
 	 * (-1 to 1) * (top motor RPM)
@@ -463,7 +489,7 @@ public class SRXDriveBase {
 		driveRightMasterMtr.set(rightCmdLevel);
 		StallConditionTimeOut();
 	}
-
+	
 	/*
 	 * If robot blocked by another robot Fast turn turns robot 180 deg to escape
 	 */
@@ -471,20 +497,19 @@ public class SRXDriveBase {
 		// future TODO
 	}
 
-	public double pidDriveCorrection(boolean _isDrivingPerpend, double _turnValue) {
-		// This method uses:
+	public double pidDriveCorrection(boolean _isDrivingPerpend, double _turnValue){
+		// This method uses: 
 		// 1) The ahrs and a PID equation to provide drive straight correction
-		// 2) Two ultrasonic sensors and a PID equation to provide drive
-		// perpendicular to a surface correction
+		// 2) Two ultrasonic sensors and a PID equation to provide drive perpendicular to a surface correction
 		if ((Math.abs(_turnValue) >= SRXDriveBaseCfg.kTurnValueDeadBand)) {
-
+			
 			// Clear variables
-			// robotHeading.resetAngle();
+//			robotHeading.resetAngle();
 			integral = 0;
 			previousError = 0;
-			previousTime = 0;
+			previousTime =0;
 		}
-
+		
 		// Calculate delta time
 		double presentTimeSec = Timer.getFPGATimestamp();
 		double error = 0;
@@ -493,19 +518,20 @@ public class SRXDriveBase {
 		if (previousTime == 0) {
 			timeDiffSec = 0.02; // set to 20ms
 		}
-
+		
 		// error = (setpoint - input); our setpoint is zero
 		if (_isDrivingPerpend) {
-			// error = distanceSensor.getPerpendicularError();
+			//error = distanceSensor.getPerpendicularError();
 		} else {
-			// error = -robotHeading.getAngle();
-		}
-
+			//error = -robotHeading.getAngle();
+		} 
+		
 		integral += error * timeDiffSec;
 		double derivative = (error - previousError) / timeDiffSec;
-		double PIDOutput = (SRXDriveBaseCfg.kCorrection_Kp * error) + (SRXDriveBaseCfg.kCorrection_Ki * integral)
-				+ (SRXDriveBaseCfg.kCorrection_Kd * derivative);
-
+		double PIDOutput = (SRXDriveBaseCfg.kCorrection_Kp * error) 
+					+ (SRXDriveBaseCfg.kCorrection_Ki * integral) 
+					+ (SRXDriveBaseCfg.kCorrection_Kd * derivative);
+		
 		// Remember variables for next scan to calculate PID
 		previousError = error;
 		previousTimeSec = presentTimeSec;
@@ -517,18 +543,17 @@ public class SRXDriveBase {
 	 * This method flags a robot in a stall condition longer than stall time
 	 */
 	public boolean StallConditionTimeOut() {
-		// Check if motors are in a stall current state and kill drives if left
-		// there too long
-		if (((Math.abs(driveRightMasterMtr.getOutputCurrent()) > SRXDriveBaseCfg.kStallCurrent)
-				|| Math.abs(driveLeftMasterMtr.getOutputCurrent()) > SRXDriveBaseCfg.kStallCurrent)) {
-			if (!isStallTimerActive) {
-				startStallTimerSec = Timer.getFPGATimestamp();
-				isStallTimerActive = true;
-			} else {
-				if ((Timer.getFPGATimestamp() - startStallTimerSec) > SRXDriveBaseCfg.kStallTimeSec) {
-					isStallTimerTimedOut = true;
+		// Check if motors are in a stall current state and kill drives if left there too long
+		if (((Math.abs(driveRightMasterMtr.getOutputCurrent()) > SRXDriveBaseCfg.kStallCurrent) 
+			||  Math.abs(driveLeftMasterMtr.getOutputCurrent()) > SRXDriveBaseCfg.kStallCurrent)) {
+				if (!isStallTimerActive) {
+					startStallTimerSec  = Timer.getFPGATimestamp();
+					isStallTimerActive = true;
+				} else {
+					if ((Timer.getFPGATimestamp() - startStallTimerSec) > SRXDriveBaseCfg.kStallTimeSec) {
+						isStallTimerTimedOut = true;
+					}
 				}
-			}
 		} else {
 			isStallTimerActive = false;
 			isStallTimerTimedOut = false;
@@ -536,108 +561,112 @@ public class SRXDriveBase {
 		return isStallTimerTimedOut;
 	}
 
-	/*
-	 * =========================================================================
-	 * ==== Autonomous motion commands
-	 */
 
+	/**
+	* =======================================================================================
+	* AUTONOMOUG METHODS
+	* =======================================================================================
+	*/
 	public boolean velMoveToPosition(double _MoveToPositionIn, boolean _isCascadeMove) {
-		// _isCascadeMove = false;
-		// This method moves the robot with a predetermined power level and
-		// stops at
+		double moveCounts = 0;
+		// This method moves the robot with a predetermined power level and stops at
 		// the specified position value. The move will be in brake mode to stop
-		// method will check that robot is stopped and set brake mode back to
-		// coast and respond
+		// method will check that robot is stopped and set brake mode back to coast and respond
 		// that move is done
-		SmartDashboard.getNumber("Move Counts", moveCounts);
 		if (!isVelMoveToPositionActive) {
-			setLeftPositionToZero();
 			isVelMoveToPositionActive = true;
-			setBrakeMode(false);
-			moveCounts = _MoveToPositionIn/* * SRXDriveBaseCfg.kRobotCoastToStopCounts*/ * SRXDriveBaseCfg.kLeftEncoderCountsPerIn;
+			setBrakeMode(true);
+			moveCounts = (_MoveToPositionIn * SRXDriveBaseCfg.kLeftEncoderCountsPerIn)
+							- SRXDriveBaseCfg.kRobotCoastToStopCounts;
 			leftCmdLevel = SRXDriveBaseCfg.kMoveToPositionVelCmdLevel;
 			rightCmdLevel = SRXDriveBaseCfg.kMoveToPositionVelCmdLevel * SRXDriveBaseCfg.kDriveStraightCorrection;
-			if (SRXDriveBaseCfg.isSRXClosedLoopEnabled) {
+			if (SRXDriveBaseCfg.isSRXClosedLoopEnabled){
 				rightCmdLevel *= SRXDriveBaseCfg.kTopRPM;
 				leftCmdLevel *= SRXDriveBaseCfg.kTopRPM;
 			}
 		} else {
-			if (Math.abs(getLeftPosition()) >= moveCounts) {
-				isVelMoveToPositionActive = false;
-				rightCmdLevel = 0;
-				leftCmdLevel = 0;
-				setBrakeMode(true);
+			if (getLeftEncoderPosition() >= moveCounts) {
+				if (_isCascadeMove) {
+					isVelMoveToPositionActive = false;
+				// delay three seconds for coast and then end move	
+				} else if (!delay(3)) {
+					isVelMoveToPositionActive = false;
+					setBrakeMode(false);
+					rightCmdLevel = 0;
+					leftCmdLevel = 0;
+				}
 			}
-
+			
 		}
-		driveRightMasterMtr.set(rightCmdLevel);
+		driveRightMasterMtr.set(rightCmdLevel) ;
 		driveLeftMasterMtr.set(leftCmdLevel);
 		return isVelMoveToPositionActive;
-
+		
 	}
 
 	public boolean movePerpendicularToStop() {
 		double perpendicularCorrection;
 		boolean _isDrivingPerpend = false;
-
+		
 		if (!isMovePerpendicularActive) {
 			isMovePerpendicularActive = true;
 			rightCmdLevel = SRXDriveBaseCfg.kDrivePerpendicularCmdLevel;
 			leftCmdLevel = SRXDriveBaseCfg.kDrivePerpendicularCmdLevel;
 		} else {
 			perpendicularCorrection = pidDriveCorrection(_isDrivingPerpend, 0);
-			leftCmdLevel = SRXDriveBaseCfg.kDrivePerpendicularCmdLevel - pidDriveCorrection(_isDrivingPerpend, 0); // PROFESSOR?
-			rightCmdLevel = SRXDriveBaseCfg.kDrivePerpendicularCmdLevel + pidDriveCorrection(_isDrivingPerpend, 0);
-			if (SRXDriveBaseCfg.isSRXClosedLoopEnabled) {
+			leftCmdLevel = SRXDriveBaseCfg.kDrivePerpendicularCmdLevel 
+					       - pidDriveCorrection(_isDrivingPerpend, 0); //PROFESSOR?
+			rightCmdLevel= SRXDriveBaseCfg.kDrivePerpendicularCmdLevel
+                           + pidDriveCorrection(_isDrivingPerpend, 0);
+	if (SRXDriveBaseCfg.isSRXClosedLoopEnabled)	{
 				rightCmdLevel *= SRXDriveBaseCfg.kTopRPM;
 				leftCmdLevel *= SRXDriveBaseCfg.kTopRPM;
 			}
-		}
-
+	}
+	
 		/*
-		 * if ((ultrasonicLeft.getRangeInches() <=
-		 * SRXDriveBaseCfg.kDrvePerpendicularStopIn) ||
-		 * (ultrasonicRight.getRangeInches()<=SRXDriveBaseCfg.
-		 * kDrvePerpendicularStopIn)){ rightCmdLevel=0; leftCmdLevel=0;
-		 * isMovePerpendicularActive=false; }
-		 */
-		driveRightMasterMtr.set(rightCmdLevel);
-		driveLeftMasterMtr.set(leftCmdLevel);
-		return isMovePerpendicularActive;
+	if ((ultrasonicLeft.getRangeInches() <= SRXDriveBaseCfg.kDrvePerpendicularStopIn) ||
+		(ultrasonicRight.getRangeInches()<=SRXDriveBaseCfg.kDrvePerpendicularStopIn)){
+		rightCmdLevel=0;
+		leftCmdLevel=0;
+		isMovePerpendicularActive=false;
+		}
+		*/
+	driveRightMasterMtr.set(rightCmdLevel);
+	driveLeftMasterMtr.set(leftCmdLevel);
+	return isMovePerpendicularActive;
 	}
 
 	public boolean rotateToAngle(double _angle, boolean _isRotationByEncoder) {
 		// direction(true)-rotates right, direction(false)-rotates left
-		double powerRight = 0;
-		double powerLeft = 0;
-		double rotationEncoderCount = 0;
-
+		
 		if (!isRotateToAngleActive) {
-			powerRight = Math.signum(_angle) * SRXDriveBaseCfg.kRotatePowerLevel;
-			powerLeft = -Math.signum(_angle) * SRXDriveBaseCfg.kRotatePowerLevel;
+			rightCmdLevel = Math.signum(_angle)*SRXDriveBaseCfg.kRotatePowerLevel; 
+			leftCmdLevel = -Math.signum(_angle)*SRXDriveBaseCfg.kRotatePowerLevel;
 			isRotateToAngleActive = true;
 			// (C = 2*PI*r) * (angle as a % of C)
-			rotationEncoderCount = 2 * Math.PI * (SRXDriveBaseCfg.kTrackWidthIn / 2) * (_angle / 360);
+			rotationEncoderCount = 2*Math.PI*(SRXDriveBaseCfg.kTrackWidthIn / 2) * (_angle / 360); 
 		} else {
 			if (_isRotationByEncoder) {
 				if (driveLeftMasterMtr.getPosition() >= rotationEncoderCount) {
-					powerRight = 0;
-					powerLeft = 0;
+					rightCmdLevel = 0;
+					leftCmdLevel = 0;
 					isRotateToAngleActive = false;
 				}
 			} else {
-				/*
-				 * if (ahrs.getYaw() >= _angle) { powerRight = 0; powerLeft = 0;
-				 * isRotateToAngleActive = false; }
-				 */
-			}
+				/*if (ahrs.getYaw() >= _angle) {
+					rightCmdLevel = 0;
+					leftCmdLevel = 0;
+					isRotateToAngleActive = false;
+				}*/
+			}			
 		}
-		driveRightMasterMtr.set(powerRight);
-		driveLeftMasterMtr.set(powerLeft);
+		driveRightMasterMtr.set(rightCmdLevel) ;
+		driveLeftMasterMtr.set(leftCmdLevel);
 		return isRotateToAngleActive;
-	}
+	} 
 
-	public boolean turnByEncoderToAngle(double _turnAngleValueDeg, double _turnRadiusIn) {
+	public boolean turnByEncoderToAngle(double _turnAngleValueDeg, double _turnRadiusIn, boolean _isCascadeTurn ) {
 		double powerCmdLevel = 0;
 		double wheelToCenterDistanceIn, ratio = 0, outerDistance = 0, innerDistance = 0;
 		if (!isTurnToAngleActive) {
@@ -663,8 +692,8 @@ public class SRXDriveBase {
 				outerDistance *= SRXDriveBaseCfg.kRightEncoderCountsPerIn;
 			}
 		} else {
-			if ((_turnAngleValueDeg > 0 && driveLeftMasterMtr.getPosition() > outerDistance)
-					|| (_turnAngleValueDeg <= 0 && driveRightMasterMtr.getPosition() > outerDistance)) {
+			if ((_turnAngleValueDeg > 0 && getLeftEncoderPosition() > outerDistance)
+					|| (_turnAngleValueDeg <= 0 && getRightEncoderPosition() > outerDistance)) {
 				isTurnToAngleActive = false;
 				powerCmdLevel = 0;
 				driveRightMasterMtr.setPosition(0);
@@ -680,37 +709,17 @@ public class SRXDriveBase {
 		}
 		return isTurnToAngleActive;
 	}
-
-	public boolean magicMove(double _rightCruiseVel, double _rightAccel, double _rightDistance, double _leftCruiseVel,
-			double _leftAccel, double _leftDistance) {
-		// This method performs a SRX magic motion command from user calculated
-		// values
-		// User should note that the right drive distance needs to be corrected
-		// by kDriveStraightCorrection
-		if (!isSRXMagicMoveActive) {
-			isSRXMagicMoveActive = true;
-			driveRightMasterMtr.changeControlMode(TalonControlMode.MotionMagic);
-			driveRightMasterMtr.setMotionMagicCruiseVelocity(_rightCruiseVel);
-			driveRightMasterMtr.setMotionMagicAcceleration(_rightAccel);
-
-			driveLeftMasterMtr.changeControlMode(TalonControlMode.MotionMagic);
-			driveLeftMasterMtr.setMotionMagicCruiseVelocity(_leftCruiseVel);
-			driveLeftMasterMtr.setMotionMagicAcceleration(_leftAccel);
-
-			_rightDistance = _rightDistance * SRXDriveBaseCfg.kDriveStraightCorrection;
-			_leftDistance = _leftDistance;
-		} else {
-			if (getRightPosition() >= _leftDistance) {
-				isSRXMagicMoveActive = false;
-				_rightDistance = 0;
-				_leftDistance = 0;
-			}
-		}
-		driveRightMasterMtr.set(_rightDistance);
-		driveLeftMasterMtr.set(_leftDistance);
-		return isSRXMagicMoveActive;
+	
+	public void stopMotors(){
+		driveRightMasterMtr.set(0);
+		driveLeftMasterMtr.set(0);
 	}
-
+	
+	/**
+	* =======================================================================================
+	* SRXDriveBase TEST METHODS
+	* =======================================================================================
+	*/
 	public void testMotorSquareWave(boolean _isMtrSquareWaveTestEnabled, boolean _isTestForRightDrive) {
 		if (_isMtrSquareWaveTestEnabled && SRXDriveBaseCfg.isSRXClosedLoopEnabled) {
 			double startTimeSec = 0;
@@ -793,50 +802,88 @@ public class SRXDriveBase {
 		}
 	}
 
-	/*
-	 * This is used to determine the SRXDriveBaseCfg.kDriveStraightCorrection
-	 * 
-	 * public boolean testMoveWithInchesAndSpeed(double distance, double speed)
-	 * { boolean moveDone = false; double leftEncoderCounts = distance /
-	 * SRXDriveBaseCfg.kLftInchesPerCount; double rightEncoderCounts = distance
-	 * / SRXDriveBaseCfg.kRgtInchesPerCount; if
-	 * ((Math.abs(driveRightMasterMtr.getEncPosition()) < rightEncoderCounts) &&
-	 * (Math.abs(driveLeftMasterMtr.getEncPosition()) < leftEncoderCounts)) {
-	 * //setTurnAndThrottle(0, speed); } else { DebugLogger.log("move is done");
-	 * moveDone = true; } return moveDone;
-	 * 
-	 * }
-	 */
-	public boolean testDriveStraightCalibration(double _testDistanceIn, double _pwrLevel) {
-		if (!isTestMoveForStraightCalActive) {
-			setLeftPositionToZero();
+	public boolean testDriveStraightCalibration(double _testDistanceIn, double _pwrLevel){
+		if (!isTestMoveForStraightCalActive){
 			isTestMoveForStraightCalActive = true;
-			testMoveCycleCnt = 0;
-			leftEncoderCounts = (int) (_testDistanceIn / SRXDriveBaseCfg.kLftInchesPerCount);
+			CycleCount = 0;
+			leftEncoderCounts = _testDistanceIn / SRXDriveBaseCfg.kLftInchesPerCount;
 			leftCmdLevel = _pwrLevel;
 			rightCmdLevel = _pwrLevel * SRXDriveBaseCfg.kDriveStraightCorrection;
-			setRightPositionToZero();
-			setLeftPositionToZero();
-		} else if (-(int) getLeftPosition() > leftEncoderCounts) {
-			isTestMoveForStraightCalActive = false;
+			setRightEncPositionToZero();
+			setLeftEncPositionToZero();
+		} else if (getLeftEncoderPosition() >= leftEncoderCounts) {
 			rightCmdLevel = 0;
 			leftCmdLevel = 0;
+			isTestMoveForStraightCalActive = false;
+			// delay 5 seconds for robot to coast to a stop
+			if (!delay(5)){
+				
+				setBrakeMode(false);
+			}
 		}
-		driveLeftMasterMtr.set(rightCmdLevel);
-		driveRightMasterMtr.set(leftCmdLevel);
+		driveLeftMasterMtr.set(leftCmdLevel);
+		driveRightMasterMtr.set(rightCmdLevel);
+		
+		// Log and Display encoders every 4 call cycles
+		++CycleCount;
+		if (CycleCount % 4 == 0) {
+//			String outputString = String.format("%8.0f,%8.0f,%8.0f", leftEncoderCounts, getLeftEncoderPosition(), getRightEncoderPosition());
+			// Log data
+//			DebugLogger.data(outputString);
+			//Print on console data
+			System.out.printf("StopCnt:%8.0f===LftEnc:%8.0f ===RgtEnc:%8.0f%n", leftEncoderCounts, getLeftEncoderPosition(), getRightEncoderPosition());
 
-		// Display encoders
-		// if (testMoveCycleCnt % 4 == 0) {
-		// //String outputString = String.format("StopCnt:%8d LftEnc:%8d
-		// RgtEnc:%8d", leftEncoderCounts, getLeftPosition(),
-		// getRightPosition());
-		System.out.printf("StopCnt:%8d LftEnc:%8.0f RgtEnc:%8.0f%n", leftEncoderCounts, getLeftPosition(),
-				getRightPosition());
-		// }
-		// ++testMoveCycleCnt;
+		}
 		return isTestMoveForStraightCalActive;
+	} 
+	
+	
+	public boolean delay(double _seconds){
+		if (!isDelayActive) {
+			isDelayActive = true;
+			startTime = Timer.getFPGATimestamp();
+		} else if (Timer.getFPGATimestamp() >= (startTime + _seconds)){
+			isDelayActive = false;
+		}
+		return isDelayActive;
 	}
+	
+	
+	/**
+	* =======================================================================================
+	* INDEX AND PROFILE COMMANDS
+	* =======================================================================================
+	*/
+	public boolean magicMove(double _rightCruiseVel, double _rightAccel, double _rightDistance, double _leftCruiseVel,
+			double _leftAccel, double _leftDistance) {
+		// This method performs a SRX magic motion command from user calculated
+		// values
+		// User should note that the right drive distance needs to be corrected
+		// by kDriveStraightCorrection
+		if (!isSRXMagicMoveActive) {
+			isSRXMagicMoveActive = true;
+			driveRightMasterMtr.changeControlMode(TalonControlMode.MotionMagic);
+			driveRightMasterMtr.setMotionMagicCruiseVelocity(_rightCruiseVel);
+			driveRightMasterMtr.setMotionMagicAcceleration(_rightAccel);
 
+			driveLeftMasterMtr.changeControlMode(TalonControlMode.MotionMagic);
+			driveLeftMasterMtr.setMotionMagicCruiseVelocity(_leftCruiseVel);
+			driveLeftMasterMtr.setMotionMagicAcceleration(_leftAccel);
+
+			_rightDistance = _rightDistance * SRXDriveBaseCfg.kDriveStraightCorrection;
+			_leftDistance = _leftDistance;
+		} else {
+			if (getRightEncoderPosition() >= _leftDistance) {
+				isSRXMagicMoveActive = false;
+				_rightDistance = 0;
+				_leftDistance = 0;
+			}
+		}
+		driveRightMasterMtr.set(_rightDistance);
+		driveLeftMasterMtr.set(_leftDistance);
+		return isSRXMagicMoveActive;
+	}
+	
 	/**
 	 * driveIndexRobot method:
 	 * 
@@ -867,9 +914,9 @@ public class SRXDriveBase {
 			// Right drive train calculations
 			double calibratedRgtDistance = indexDistanceIn * SRXDriveBaseCfg.kRgtDistanceCalibration;
 			double rightDrvTrainCruiseVelSetPt = (1.5 * (calibratedRgtDistance / indexTime) * 60)
-					/ SRXDriveBaseCfg.kCalibratedRgtWheelCircum;
+					/ SRXDriveBaseCfg.kMeasuredRgtWheelCircum;
 			double rightDrvTrainAccelSetPt = ((1.5 * (indexDistanceIn / indexTime) * 60)
-					/ SRXDriveBaseCfg.kCalibratedRgtWheelCircum / (indexTime * .33333));
+					/ SRXDriveBaseCfg.kMeasuredRgtWheelCircum / (indexTime * .33333));
 			rightDrvTrainTargetPosSetPt = calibratedRgtDistance / SRXDriveBaseCfg.kRgtInchesPerCount;
 
 			driveRightMasterMtr.setMotionMagicCruiseVelocity(rightDrvTrainCruiseVelSetPt);
@@ -879,9 +926,9 @@ public class SRXDriveBase {
 
 			// Left drive train calcualtions
 			double leftDrvTrainCusiseVelSetPt = (1.5 * (calibratedLftDistance / indexTime) * 60)
-					/ SRXDriveBaseCfg.kCalibratedLftWheelCircum;
+					/ SRXDriveBaseCfg.kMeasuredLftWheelCircum;
 			double leftDrvTrainAccelSetPt = ((1.5 * (indexDistanceIn / indexTime) * 60)
-					/ SRXDriveBaseCfg.kCalibratedLftWheelCircum / (indexTime * .33333));
+					/ SRXDriveBaseCfg.kMeasuredLftWheelCircum / (indexTime * .33333));
 			leftDrvTrainTargetPosSetPt = calibratedLftDistance / SRXDriveBaseCfg.kLftInchesPerCount;
 			driveLeftMasterMtr.setMotionMagicCruiseVelocity(leftDrvTrainCusiseVelSetPt);
 			driveLeftMasterMtr.setMotionMagicAcceleration(leftDrvTrainAccelSetPt);
@@ -909,9 +956,5 @@ public class SRXDriveBase {
 		}
 		return isDriveMoving;
 	}
-
-	public void stopMotors() {
-		driveRightMasterMtr.set(0);
-		driveLeftMasterMtr.set(0);
-	}
+	
 }

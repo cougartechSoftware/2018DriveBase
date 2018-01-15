@@ -10,7 +10,8 @@ public class TeleopController {
 	// smooth move parameters
 	public double previousEMAValue = 0.0; // -1 to 1
 	public int timePeriodSF = TeleopControllerCfg.kHighSmoothPeriod;
-	public boolean lastButtonRead = false, isButtonCmdActive = false;
+	public boolean lastButtonRead = false, isButtonCmdActive = true;
+	public static double test = 0;
 
 	// public boolean stall;
 	// tipping filter
@@ -25,6 +26,7 @@ public class TeleopController {
 	}
 
 	public void teleopInit() {
+		driveBase.DisplayChangeParmeters();
 	}
 
 	public void teleopPeriodic() {
@@ -42,38 +44,46 @@ public class TeleopController {
 		turn = AdjustForControllerDeadBand(turn);
 		// CheckForAdjustSpeedRequest();
 		driveBase.UpdateSRXDriveDataDisplay();
-		driveBase.DisplayChangeParmeters();
 
 		// Pressing the A button causes a calibration method for driving
 		// straight
+//		boolean buttonA = joystick.getRawButton(XBoxConfig.A_BUTTON);
 //		SmartDashboard.getNumber("Right Correction Factor", SRXDriveBaseCfg.kDriveStraightCorrection);
-//		if (!joystick.getRawButton(XBoxConfig.A_BUTTON) && lastButtonRead) {
-//			isButtonCmdActive = true;
-//
-//		} else if (isButtonCmdActive) {
-//			if (!driveBase.testDriveStraightCalibration(40.0, .5)) {
-//				isButtonCmdActive = false;
-//			}
-//		}
-//		lastButtonRead = joystick.getRawButton(XBoxConfig.A_BUTTON);
-//
-//		// Pressing the B button causes a different calibration method for
-//		// driving straight
-//		if (!joystick.getRawButton(XBoxConfig.B_BUTTON) && lastButtonRead) {
-//			isButtonCmdActive = true;
-//
-//		} else if (isButtonCmdActive) {
-//			if (!driveBase.velMoveToPosition(40.0, false)) {
-//				isButtonCmdActive = false;
-//			}
-//		}
-//		lastButtonRead = joystick.getRawButton(XBoxConfig.B_BUTTON);
+
+		
+		if (!joystick.getRawButton(XBoxConfig.A_BUTTON) && lastButtonRead) {
+			isButtonCmdActive = true;
+//			test = SmartDashboard.getNumber("Right Correction Factor", SRXDriveBaseCfg.kDriveStraightCorrection);
+			
+		} else if (isButtonCmdActive) {
+			if (!driveBase.rotateToAngle(45, true)) {
+				isButtonCmdActive = false;
+			}
+		}
+		lastButtonRead = joystick.getRawButton(XBoxConfig.A_BUTTON);
+//		System.out.println("Right Correction Factor is " + test);
+		
+		// Pressing the B button causes a different calibration method for
+		// driving straight
+		if (!joystick.getRawButton(XBoxConfig.B_BUTTON) && lastButtonRead) {
+			isButtonCmdActive = true;
+
+		} else if (isButtonCmdActive) {
+			if (!driveBase.velMoveToPosition(40.0, false)) {
+				isButtonCmdActive = false;
+			}
+		}
+		lastButtonRead = joystick.getRawButton(XBoxConfig.B_BUTTON);
 
 		boolean randoLogBoo = false;
 		if (randoLogBoo == true) {
 			driveBase.logSRXDrive();
 		}
-		driveBase.WPISetThrottleTurn(-turn / 2, throttle / 1.5);
+		
+		
+//		driveBase.setThrottleTurn(-throttle / 2, turn / 1.5, false);
+		
+		
 		// boolean stall = driveBase.StallConditionTimeOut();
 		//
 		// if(stall = true){

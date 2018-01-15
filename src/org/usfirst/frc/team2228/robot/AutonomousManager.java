@@ -4,6 +4,7 @@ import org.usfirst.frc.team2228.commands.JustDriveCommand;
 import org.usfirst.frc.team2228.commands.StringCommand;
 import org.usfirst.frc.team2228.commands.WaitCommand;
 
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.CommandGroup;
 import edu.wpi.first.wpilibj.command.Scheduler;
@@ -11,7 +12,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class AutonomousManager {
-	boolean isButtonCmdActive;
+	boolean finishedAuto = true;
+	Joystick joystick;
 	private SRXDriveBase driveBase;
     String autoSelected;
     SendableChooser autoChooser;
@@ -23,8 +25,9 @@ public class AutonomousManager {
 	
 	SRXDriveBase drive;
 	
-	public AutonomousManager(SRXDriveBase _driveBase){
+	public AutonomousManager(SRXDriveBase _driveBase, Joystick _joystick){
 		drive = _driveBase;	
+		joystick = _joystick;
 		
 		autoChooser = new SendableChooser<String>();
 		autoChooser.addDefault("Default Auto", defaultAuto);
@@ -36,8 +39,7 @@ public class AutonomousManager {
 		
 	public void autonomousInit(SRXDriveBase _driveBase) {
 		driveBase = _driveBase;
-		driveBase.setLeftPositionToZero();
-		isButtonCmdActive = true;
+		driveBase.setLeftEncPositionToZero();
 		autoSelected = (String) autoChooser.getSelected();
 		System.out.println("Auto selected: " + autoSelected);
 		Scheduler scheduler = Scheduler.getInstance();
@@ -75,12 +77,26 @@ public class AutonomousManager {
 	
 	public void AutoPeriodic(SRXDriveBase _driveBase){
 		driveBase = _driveBase;
-		if (isButtonCmdActive) {
-			if (!driveBase.velMoveToPosition(120.0, false)) {
-				isButtonCmdActive = false;
-				System.out.println("Stop moving forwards!!!!");
-			}
-		}
+//		if (finishedAuto) {
+//			if (!driveBase.testDriveStraightCalibration(40.0, .4)) {
+//				finishedAuto = false;
+//				System.out.println("Stop moving forwards!!!!");
+//			}
+//		}
+		
+		
+//		boolean buttonA = joystick.getRawButton(XBoxConfig.Y_BUTTON);
+//		SmartDashboard.getNumber("Right Correction Factor", SRXDriveBaseCfg.kDriveStraightCorrection);
+//		if (buttonA /*&& lastButtonRead*/) {
+//			finishedAuto = true;
+//			System.out.println("Button1 is pressed");
+//
+//		} else if (finishedAuto) {
+//			System.out.println("Button2 is pressed");
+//			if (!driveBase.testDriveStraightCalibration(40.0, .4)) {
+//				finishedAuto = false;
+//			}
+//		}
 	}
 	
     public void killAuto(){

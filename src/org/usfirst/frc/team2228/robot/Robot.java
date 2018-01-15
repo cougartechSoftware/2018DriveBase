@@ -43,7 +43,7 @@ public class Robot extends IterativeRobot {
 		joystick = new Joystick(RobotMap.JOYSTICK_1);
 		driveBase = new SRXDriveBase();
 		chessyDrive = new TeleopController(joystick, driveBase);
-		autoMgr = new AutonomousManager(driveBase);
+		autoMgr = new AutonomousManager(driveBase, joystick);
 		
 		  
 		File _logDirectory = new File("/home/lvuser/log");
