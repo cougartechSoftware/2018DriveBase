@@ -57,7 +57,7 @@ public class SRXDriveBaseCfg {
 		public static double kMeasuredRgtWheelDiameter = 6.0;
 		public static double kMeasuredLftWheelDiameter = 6.0;
 		public static double kWheelDiameterIn = (kMeasuredRgtWheelDiameter + kMeasuredLftWheelDiameter)/2;
-		public static double kTrackWidthIn = 0;
+		public static double kTrackWidthIn = 21.5;
 		
 		// CTRE CIMcode magnetic quadrature 20 cycles per revolution
 		public static int kDriveEncoderCyclesPerRev = 20 * (int)kGearRatio;
@@ -94,7 +94,7 @@ public class SRXDriveBaseCfg {
 		//===============================================
 		//MOTION METHOD PARAMETERS
 		
-		public static double kRotatePowerLevel = 0.20;
+		// not used-public static double kRotatePowerLevel = 0.20;
 		// See topRPM calibration procedure for this parameter
 		public static double kTopRPM = 1000;
 		
@@ -103,9 +103,9 @@ public class SRXDriveBaseCfg {
         public static double kStallTimeSec = 3.0;
 		
 		public static double kRobotCoastToStopCounts = 0;
-        public static double kMoveToPositionVelCmdLevel = 0.3;
-        public static double kDrivePerpendicularCmdLevel = 0;
-        public static double kturnCmdLevel = 0;
+        // not used-public static double kMoveToPositionVelCmdLevel = 0.3;
+        // not used-public static double kDrivePerpendicularCmdLevel = 0;
+        // not used-public static double kturnCmdLevel = 0;
         
 		// ==========================================
 		// TEST METHOD PARAMETERS

@@ -43,7 +43,7 @@ public class JustDriveCommand extends Command {
 	// Called once after isFinished returns true
 	@Override
 	protected void end() {
-		drive.stopMotors();
+		drive.setStopMotors();
 		System.out.println("just drive done");
 	}
 

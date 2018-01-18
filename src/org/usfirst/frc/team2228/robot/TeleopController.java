@@ -10,7 +10,7 @@ public class TeleopController {
 	// smooth move parameters
 	public double previousEMAValue = 0.0; // -1 to 1
 	public int timePeriodSF = TeleopControllerCfg.kHighSmoothPeriod;
-	public boolean lastButtonRead = false, isButtonCmdActive = true;
+	public boolean lastButtonRead = false, isButtonCmdActive = false;
 	public static double test = 0;
 
 	// public boolean stall;
@@ -43,7 +43,7 @@ public class TeleopController {
 		throttle = AdjustForControllerDeadBand(throttle);
 		turn = AdjustForControllerDeadBand(turn);
 		// CheckForAdjustSpeedRequest();
-		driveBase.UpdateSRXDriveDataDisplay();
+		//driveBase.UpdateSRXDriveDataDisplay();
 
 		// Pressing the A button causes a calibration method for driving
 		// straight
@@ -56,30 +56,31 @@ public class TeleopController {
 //			test = SmartDashboard.getNumber("Right Correction Factor", SRXDriveBaseCfg.kDriveStraightCorrection);
 			
 		} else if (isButtonCmdActive) {
-			if (!driveBase.rotateToAngle(45, true)) {
+			if (!driveBase.turnByEncoderToAngle(45, 25, 0.3, false, false)) {
 				isButtonCmdActive = false;
 			}
 		}
-		lastButtonRead = joystick.getRawButton(XBoxConfig.A_BUTTON);
+		lastButtonRead = joystick.getRawButton(XBoxConfig.A_BUTTON); 
 //		System.out.println("Right Correction Factor is " + test);
 		
+		/*
 		// Pressing the B button causes a different calibration method for
 		// driving straight
 		if (!joystick.getRawButton(XBoxConfig.B_BUTTON) && lastButtonRead) {
 			isButtonCmdActive = true;
 
 		} else if (isButtonCmdActive) {
-			if (!driveBase.velMoveToPosition(40.0, false)) {
+			if (!driveBase.velMoveToPosition(40.0, 0.3, false)) {
 				isButtonCmdActive = false;
 			}
 		}
 		lastButtonRead = joystick.getRawButton(XBoxConfig.B_BUTTON);
-
-		boolean randoLogBoo = false;
-		if (randoLogBoo == true) {
-			driveBase.logSRXDrive();
-		}
-		
+*/
+//		boolean randoLogBoo = false;
+//		if (randoLogBoo == true) {
+//			driveBase.logSRXDriveData();
+//		}
+//		
 		
 //		driveBase.setThrottleTurn(-throttle / 2, turn / 1.5, false);
 		
