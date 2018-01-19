@@ -82,6 +82,8 @@ public class SRXDriveBase {
 	// SRXDriveBase Class Constructor
 	public SRXDriveBase() {
 
+		
+		
 		// Create CAN SRX motor controller objects
 		driveRightMasterMtr = new CANTalon(RobotMap.CAN_ID_1);
 		driveRightFollowerMtr = new CANTalon(RobotMap.CAN_ID_2);
@@ -163,7 +165,7 @@ public class SRXDriveBase {
 
 		// Create drive for WPI arcade usage
 		driveStyle = new RobotDrive(driveRightMasterMtr, driveLeftMasterMtr);
-
+		driveStyle.setSafetyEnabled(false);
 		/*
 		 * Clear all sticky faults in drive controllers
 		 */
@@ -568,7 +570,7 @@ public class SRXDriveBase {
 				if (_isCascadeMove) {
 					isVelMoveToPositionActive = false;	
 				} else {
-						// Apply power level (.1) in opposite direction for 1 second to brake
+						// Apply power level (.05) in opposite direction for 1 second to brake
 						rightCmdLevel = -(Math.signum(_MoveToPositionIn)*0.05);
 						leftCmdLevel = -(Math.signum(_MoveToPositionIn)*0.05);
 					if (!delay(1)) {
@@ -635,9 +637,9 @@ public class SRXDriveBase {
 			rotationEncoderCount = Math.PI*(SRXDriveBaseCfg.kTrackWidthIn) * SRXDriveBaseCfg.kLeftEncoderCountsPerIn * (_rotateToAngle / 360); 
 		} else if (driveLeftMasterMtr.getEncPosition() >= rotationEncoderCount) {
 	
-			// Apply power level (.1) in oposite direction for 1 second to brake
-				rightCmdLevel = (Math.signum(_rotateToAngle)*0.1);
-				leftCmdLevel = -(Math.signum(_rotateToAngle)*0.1);
+			// Apply power level (.05) in opposite direction for 1 second to brake
+				rightCmdLevel = (Math.signum(_rotateToAngle)*0.05);
+				leftCmdLevel = -(Math.signum(_rotateToAngle)*0.05);
 			if (!delay(1)) {
 				isRotateToAngleActive = false;
 				isDriveTrainMoving = false;
@@ -668,20 +670,21 @@ public class SRXDriveBase {
 			driveRightMasterMtr.setEncPosition(0);
 			driveLeftMasterMtr.setEncPosition(0);
 			wheelToCenterDistanceIn = (SRXDriveBaseCfg.kTrackWidthIn / 2);
-			speedRatio = (_turnRadiusIn - wheelToCenterDistanceIn) / (_turnRadiusIn + wheelToCenterDistanceIn);
+			speedRatio =(_turnRadiusIn + wheelToCenterDistanceIn) / (_turnRadiusIn - wheelToCenterDistanceIn);
 			if (_turnAngleDeg > 0) {
-				rightCmdLevel = _turnPowerLevel;
+				rightCmdLevel = (_turnPowerLevel);
 				leftCmdLevel = (_turnPowerLevel * speedRatio);
+		
 			} else {
 				rightCmdLevel = (_turnPowerLevel * speedRatio);
-				leftCmdLevel = _turnPowerLevel;
+				leftCmdLevel = (_turnPowerLevel);
 			}
 			
 			// Convert turn distance in inches to encoder counts
 			if (_turnAngleDeg > 0) {
-				outerDistanceCnts = 2 * Math.PI * ((_turnRadiusIn + wheelToCenterDistanceIn) * (_turnAngleDeg / 360)) *	SRXDriveBaseCfg.kLeftEncoderCountsPerIn;
+				outerDistanceCnts = 2 * Math.PI * ((_turnRadiusIn + wheelToCenterDistanceIn) * (Math.abs(_turnAngleDeg) / 360)) *	SRXDriveBaseCfg.kLeftEncoderCountsPerIn;
 			} else {
-				outerDistanceCnts = 2 * Math.PI * ((_turnRadiusIn + wheelToCenterDistanceIn) * (_turnAngleDeg / 360)) * SRXDriveBaseCfg.kRightEncoderCountsPerIn;
+				outerDistanceCnts = 2 * Math.PI * ((_turnRadiusIn + wheelToCenterDistanceIn) * (Math.abs(_turnAngleDeg) / 360)) * SRXDriveBaseCfg.kRightEncoderCountsPerIn;
 			}
 		} else {
 			if (_isCascadeTurn) {
@@ -689,11 +692,12 @@ public class SRXDriveBase {
 			} else if ((_turnAngleDeg >= 0 && (getLeftEncoderPosition() > outerDistanceCnts))
 					|| (_turnAngleDeg <= 0 && (getRightEncoderPosition() > outerDistanceCnts))) {
 						
-				// Apply power level (.1) in oposite direction for 1 second to brake
-				rightCmdLevel = -0.1;
-				leftCmdLevel = -0.1;
+				// Apply power level (.05) in opposite direction for 1 second to brake
+				rightCmdLevel = -(Math.signum(_turnAngleDeg) * 0.05);
+				leftCmdLevel = -(Math.signum(_turnAngleDeg) * 0.05);
 				if (!delay(1)) {
 					isTurnToAngleActive = false;
+					System.out.println("Active flag" + isTurnToAngleActive);
 					isDriveTrainMoving = false;
 					setBrakeMode(false);
 					rightCmdLevel = 0;

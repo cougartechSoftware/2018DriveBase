@@ -56,7 +56,7 @@ public class TeleopController {
 //			test = SmartDashboard.getNumber("Right Correction Factor", SRXDriveBaseCfg.kDriveStraightCorrection);
 			
 		} else if (isButtonCmdActive) {
-			if (!driveBase.turnByEncoderToAngle(45, 25, 0.3, false, false)) {
+			if (!driveBase.velMoveToPosition(50.0, 0.2, false)) {
 				isButtonCmdActive = false;
 			}
 		}
