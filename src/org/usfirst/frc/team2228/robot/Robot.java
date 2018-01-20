@@ -83,7 +83,7 @@ public class Robot extends IterativeRobot {
 	public void teleopInit() {
 		autoMgr.killAuto();
 		System.out.println("teleopInit() fi!");
-		
+		driveBase.setClearActionFlags();
 		chessyDrive.teleopInit();
 	}
 

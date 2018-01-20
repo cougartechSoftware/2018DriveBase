@@ -73,7 +73,7 @@ public class SRXDriveBase {
 	private boolean isTestMoveForStraightCalActive = false;
 	private boolean isDelayActive = false;
 	private boolean isDriveTrainMoving = false;
-	private boolean isConsoleDataEnabled = true;
+	private boolean isConsoleDataEnabled = false;
 	private boolean isLoggingDataEnabled = false;
 	private boolean islogSRXDriveActive = false;
 	
@@ -268,7 +268,22 @@ public class SRXDriveBase {
 	public void setEnableLoggingData(boolean _loggingData){
 		isLoggingDataEnabled = _loggingData;
 	}
-	
+	public void setClearActionFlags() {
+		isStallTimerActive = false;
+		isStallTimerTimedOut = false;
+		isVelMoveToPositionActive = false;
+		isRotateToAngleActive = false;
+		isTurnToAngleActive = false;
+		isSRXMagicMoveActive = false;
+		isLowTimeActive = false;
+		isSqWaveFnctStartActive = false;
+		isMovePerpendicularActive = false;
+		isTestMoveForStraightCalActive = false;
+		isDelayActive = false;
+		isDriveTrainMoving = false;
+		islogSRXDriveActive = false;
+	}
+
 	/**
 	* =======================================================================================
 	* STATUS METHODS
@@ -559,6 +574,8 @@ public class SRXDriveBase {
 		if (!isVelMoveToPositionActive) {
 			isVelMoveToPositionActive = true;
 			isDriveTrainMoving = true;
+			driveRightMasterMtr.setEncPosition(0);
+			driveLeftMasterMtr.setEncPosition(0);
 			setBrakeMode(true);
 			moveCounts = (Math.abs(_MoveToPositionIn) * SRXDriveBaseCfg.kLeftEncoderCountsPerIn)
 							- SRXDriveBaseCfg.kRobotCoastToStopCounts;
@@ -569,6 +586,7 @@ public class SRXDriveBase {
 			if (getLeftEncoderPosition() >= moveCounts) {
 				if (_isCascadeMove) {
 					isVelMoveToPositionActive = false;	
+					System.out.println("cascade move foward done");
 				} else {
 						// Apply power level (.05) in opposite direction for 1 second to brake
 						rightCmdLevel = -(Math.signum(_MoveToPositionIn)*0.05);

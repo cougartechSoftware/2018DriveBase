@@ -12,8 +12,10 @@ public class TeleopController {
 	public int timePeriodSF = TeleopControllerCfg.kHighSmoothPeriod;
 	public boolean lastButtonRead = false, isButtonCmdActive = false;
 	public static double test = 0;
-
+	public int autoCmdSequence = 1;
+	public boolean isButtonCmdActiveB = false;
 	// public boolean stall;
+	public boolean lastButtonReadB = false;
 	// tipping filter
 	protected double smoothFactor = 1.0;
 
@@ -56,34 +58,55 @@ public class TeleopController {
 //			test = SmartDashboard.getNumber("Right Correction Factor", SRXDriveBaseCfg.kDriveStraightCorrection);
 			
 		} else if (isButtonCmdActive) {
-			if (!driveBase.velMoveToPosition(50.0, 0.2, false)) {
+			if (!driveBase.turnByEncoderToAngle(90, 25, .2, false, false )) {
 				isButtonCmdActive = false;
 			}
 		}
 		lastButtonRead = joystick.getRawButton(XBoxConfig.A_BUTTON); 
-//		System.out.println("Right Correction Factor is " + test);
 		
-		/*
-		// Pressing the B button causes a different calibration method for
-		// driving straight
-		if (!joystick.getRawButton(XBoxConfig.B_BUTTON) && lastButtonRead) {
-			isButtonCmdActive = true;
 
-		} else if (isButtonCmdActive) {
-			if (!driveBase.velMoveToPosition(40.0, 0.3, false)) {
-				isButtonCmdActive = false;
+
+
+		if (!joystick.getRawButton(XBoxConfig.B_BUTTON) && lastButtonReadB) {
+					isButtonCmdActiveB = true;	
+					autoCmdSequence = 1;
+		} else if (isButtonCmdActiveB) {
+			switch(autoCmdSequence){
+				case 1:
+					// move 10 inches
+					System.out.println("case 1");
+					if (!driveBase.velMoveToPosition(10, 0.2, true)) {
+						autoCmdSequence = 2;
+					};
+					break;
+				case 2:
+					// turn right 90 deg
+					System.out.println("case 2");
+					if(!driveBase.turnByEncoderToAngle(45, 25, .2, false, true )){
+						autoCmdSequence = 3;
+					};
+					break;
+				case 3:
+					// move 10 in
+					System.out.println("case 3");
+					if (!driveBase.velMoveToPosition(25, 0.2, true)) {
+						autoCmdSequence = 4;
+					};
+					break;
+				case 4:
+					// turn left 90 deg
+					System.out.println("case 4");
+					if(!driveBase.turnByEncoderToAngle(-45, 25, .2, false, false )){
+						isButtonCmdActiveB = false;	
+					};
+					break;	
+				default:
+					isButtonCmdActiveB = false;	
 			}
+			
 		}
-		lastButtonRead = joystick.getRawButton(XBoxConfig.B_BUTTON);
-*/
-//		boolean randoLogBoo = false;
-//		if (randoLogBoo == true) {
-//			driveBase.logSRXDriveData();
-//		}
-//		
-		
-//		driveBase.setThrottleTurn(-throttle / 2, turn / 1.5, false);
-		
+				lastButtonReadB = joystick.getRawButton(XBoxConfig.B_BUTTON);
+				
 		
 		// boolean stall = driveBase.StallConditionTimeOut();
 		//
