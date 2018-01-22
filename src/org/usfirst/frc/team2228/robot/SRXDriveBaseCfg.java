@@ -103,6 +103,7 @@ public class SRXDriveBaseCfg {
         public static double kStallTimeSec = 3.0;
 		
 		public static double kRobotCoastToStopCounts = 0;
+		public static double kStopBrakeValue = 0.05;
         // not used-public static double kMoveToPositionVelCmdLevel = 0.3;
         // not used-public static double kDrivePerpendicularCmdLevel = 0;
         // not used-public static double kturnCmdLevel = 0;

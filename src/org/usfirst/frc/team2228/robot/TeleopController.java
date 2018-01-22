@@ -7,66 +7,63 @@ public class TeleopController {
 	private Joystick joystick;
 	private SRXDriveBase driveBase;
 
-	// smooth move parameters
-	public double previousEMAValue = 0.0; // -1 to 1
-	public int timePeriodSF = TeleopControllerCfg.kHighSmoothPeriod;
-	public boolean lastButtonRead = false, isButtonCmdActive = false;
-	public static double test = 0;
-	public int autoCmdSequence = 1;
-	public boolean isButtonCmdActiveB = false;
-	// public boolean stall;
-	public boolean lastButtonReadB = false;
-	// tipping filter
-	protected double smoothFactor = 1.0;
-
 	private short loggerIterations = 0;
 	private short loggerThreshold = 20;
+	
+	private int autoCmdSequence = 1;
+	private int timePeriodSF = TeleopControllerCfg.kHighSmoothPeriod;
+	
+	private double previousEMAValue = 0.0; // -1 to 1
+	private static double test = 0;
+	private double smoothFactor = 1.0;
+	
+	private boolean lastButtonRead = false, isButtonCmdActive = false;
+	private boolean isButtonCmdActiveB = false;
+	private boolean lastButtonReadB = false;
+	
+	private String lastMsgString = " ";
 
 	public TeleopController(Joystick _joystick, SRXDriveBase _driveBase) {
 		joystick = _joystick;
 		driveBase = _driveBase;
 	}
-
 	public void teleopInit() {
-		driveBase.DisplayChangeParmeters();
+		driveBase.setClearActionFlags();
 	}
-
 	public void teleopPeriodic() {
 		double origThrottle = joystick.getRawAxis(DriverConfig.throttle);
 		double origTurn = joystick.getRawAxis(DriverConfig.turn);
 
 		double turn = origTurn;
 		double throttle = origThrottle;
-
-		turn = CheckTurnSensitivityFilter(limit(turn));
-		throttle = CheckThrottleSensitivity(limit(throttle));
-		// throttle = CheckSmoothMove(limit(throttle));
-
 		throttle = AdjustForControllerDeadBand(throttle);
 		turn = AdjustForControllerDeadBand(turn);
-		// CheckForAdjustSpeedRequest();
-		//driveBase.UpdateSRXDriveDataDisplay();
+//		turn = CheckTurnSensitivityFilter(limit(turn));
+//		throttle = CheckThrottleSensitivity(limit(throttle));
+//		throttle = CheckSmoothMove(limit(throttle));
 
-		// Pressing the A button causes a calibration method for driving
-		// straight
-//		boolean buttonA = joystick.getRawButton(XBoxConfig.A_BUTTON);
-//		SmartDashboard.getNumber("Right Correction Factor", SRXDriveBaseCfg.kDriveStraightCorrection);
-
-		
+//		throttle = AdjustForControllerDeadBand(throttle);
+//		turn = AdjustForControllerDeadBand(turn);
+//		CheckForAdjustSpeedRequest();
+//		driveBase.UpdateSRXDriveDataDisplay();
+//		driveBase.setThrottleTurn((-throttle * .7), (turn * .7), false);
+		getButtonA();
+	    getButtonB();
+	}	
+//====================================================================
+	private void getButtonA(){
 		if (!joystick.getRawButton(XBoxConfig.A_BUTTON) && lastButtonRead) {
 			isButtonCmdActive = true;
-//			test = SmartDashboard.getNumber("Right Correction Factor", SRXDriveBaseCfg.kDriveStraightCorrection);
-			
+			msg("Botton A hit");
 		} else if (isButtonCmdActive) {
-			if (!driveBase.turnByEncoderToAngle(90, 25, .2, false, false )) {
+			if (!driveBase.rotateToAngle(180, .3)) {
 				isButtonCmdActive = false;
+				msg("Botton A done");
 			}
 		}
 		lastButtonRead = joystick.getRawButton(XBoxConfig.A_BUTTON); 
-		
-
-
-
+	}
+	private void getButtonB(){
 		if (!joystick.getRawButton(XBoxConfig.B_BUTTON) && lastButtonReadB) {
 					isButtonCmdActiveB = true;	
 					autoCmdSequence = 1;
@@ -74,29 +71,29 @@ public class TeleopController {
 			switch(autoCmdSequence){
 				case 1:
 					// move 10 inches
-					System.out.println("case 1");
+					msg("case 1");
 					if (!driveBase.velMoveToPosition(10, 0.2, true)) {
 						autoCmdSequence = 2;
 					};
 					break;
 				case 2:
 					// turn right 90 deg
-					System.out.println("case 2");
-					if(!driveBase.turnByEncoderToAngle(45, 25, .2, false, true )){
+					msg("case 2");
+					if(!driveBase.turnByEncoderToAngle(90, 25, .1, false, true )){
 						autoCmdSequence = 3;
 					};
 					break;
 				case 3:
 					// move 10 in
-					System.out.println("case 3");
+					msg("case 3");
 					if (!driveBase.velMoveToPosition(25, 0.2, true)) {
 						autoCmdSequence = 4;
 					};
 					break;
 				case 4:
 					// turn left 90 deg
-					System.out.println("case 4");
-					if(!driveBase.turnByEncoderToAngle(-45, 25, .2, false, false )){
+					msg("case 4");
+					if(!driveBase.turnByEncoderToAngle(-90, 25, .1, false, false )){
 						isButtonCmdActiveB = false;	
 					};
 					break;	
@@ -105,24 +102,14 @@ public class TeleopController {
 			}
 			
 		}
-				lastButtonReadB = joystick.getRawButton(XBoxConfig.B_BUTTON);
-				
-		
-		// boolean stall = driveBase.StallConditionTimeOut();
-		//
-		// if(stall = true){
-		// driveBase.stopMotors();
-		// System.out.println("Motors stopped");
-		// }
-
-		loggerIterations++;
-		if (loggerIterations >= loggerThreshold) {
-
-			// DebugLogger.log(origThrottle + "," + origTurn + "," + throttle +
-			// "," + turn);
-		}
+		lastButtonReadB = joystick.getRawButton(XBoxConfig.B_BUTTON);
 	}
-
+	
+	private void msg(String _msgString){
+		if (_msgString != lastMsgString){
+			System.out.println(_msgString);
+			lastMsgString = _msgString;}
+		}
 	/********************
 	 * Joystick Filtering Functions
 	 ******************************/

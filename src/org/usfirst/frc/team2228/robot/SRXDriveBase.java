@@ -78,11 +78,10 @@ public class SRXDriveBase {
 	private boolean islogSRXDriveActive = false;
 	
 	String logSRXDriveString = " ";
-	
+	private String lastMsgString = " ";
 	// SRXDriveBase Class Constructor
 	public SRXDriveBase() {
-
-		
+	
 		
 		// Create CAN SRX motor controller objects
 		driveRightMasterMtr = new CANTalon(RobotMap.CAN_ID_1);
@@ -283,6 +282,11 @@ public class SRXDriveBase {
 		isDriveTrainMoving = false;
 		islogSRXDriveActive = false;
 	}
+	private void msg(String _msgString){
+		if (_msgString != lastMsgString){
+			System.out.println(_msgString);
+			lastMsgString = _msgString;}
+		}
 
 	/**
 	* =======================================================================================
@@ -508,7 +512,7 @@ public class SRXDriveBase {
 								- driveStraightDirCorrection;
 
 		} else {
-			leftCmdLevel = _throttleValue + _turnValue;
+			leftCmdLevel = _throttleValue  +_turnValue;
 			rightCmdLevel = ((_throttleValue - _turnValue) * SRXDriveBaseCfg.kDriveStraightCorrection);
 		}
 
@@ -579,18 +583,19 @@ public class SRXDriveBase {
 			setBrakeMode(true);
 			moveCounts = (Math.abs(_MoveToPositionIn) * SRXDriveBaseCfg.kLeftEncoderCountsPerIn)
 							- SRXDriveBaseCfg.kRobotCoastToStopCounts;
+			msg("Move Counts" + moveCounts);
 			leftCmdLevel = (Math.signum(_MoveToPositionIn)*_MoveToPositionPwrLevel);
 			rightCmdLevel = (Math.signum(_MoveToPositionIn)*_MoveToPositionPwrLevel) * SRXDriveBaseCfg.kDriveStraightCorrection;
-			
+			msg("Move Command" + rightCmdLevel + leftCmdLevel);
 		} else {
 			if (getLeftEncoderPosition() >= moveCounts) {
 				if (_isCascadeMove) {
 					isVelMoveToPositionActive = false;	
 					System.out.println("cascade move foward done");
 				} else {
-						// Apply power level (.05) in opposite direction for 1 second to brake
-						rightCmdLevel = -(Math.signum(_MoveToPositionIn)*0.05);
-						leftCmdLevel = -(Math.signum(_MoveToPositionIn)*0.05);
+						// Apply power level in opposite direction to brake
+						rightCmdLevel = -(Math.signum(_MoveToPositionIn)*SRXDriveBaseCfg.kStopBrakeValue);
+						leftCmdLevel = -(Math.signum(_MoveToPositionIn)*SRXDriveBaseCfg.kStopBrakeValue);
 					if (!delay(1)) {
 						isVelMoveToPositionActive = false;
 						isDriveTrainMoving = false;
@@ -650,14 +655,14 @@ public class SRXDriveBase {
 			driveLeftMasterMtr.setEncPosition(0);
 			rightCmdLevel = -Math.signum(_rotateToAngle) * _rotatePowerLevel; 
 			leftCmdLevel = Math.signum(_rotateToAngle) * _rotatePowerLevel;
-			
 			// (C = PI*D) * (angle as a fraction of C)
-			rotationEncoderCount = Math.PI*(SRXDriveBaseCfg.kTrackWidthIn) * SRXDriveBaseCfg.kLeftEncoderCountsPerIn * (_rotateToAngle / 360); 
+			rotationEncoderCount = Math.PI*(SRXDriveBaseCfg.kTrackWidthIn) * SRXDriveBaseCfg.kLeftEncoderCountsPerIn * (_rotateToAngle / 360);
+			msg("rotation count" + rotationEncoderCount);
 		} else if (driveLeftMasterMtr.getEncPosition() >= rotationEncoderCount) {
 	
-			// Apply power level (.05) in opposite direction for 1 second to brake
-				rightCmdLevel = (Math.signum(_rotateToAngle)*0.05);
-				leftCmdLevel = -(Math.signum(_rotateToAngle)*0.05);
+			// Apply power level in opposite direction to brake
+				rightCmdLevel = (Math.signum(_rotateToAngle)*SRXDriveBaseCfg.kStopBrakeValue);
+				leftCmdLevel = -(Math.signum(_rotateToAngle)*SRXDriveBaseCfg.kStopBrakeValue);
 			if (!delay(1)) {
 				isRotateToAngleActive = false;
 				isDriveTrainMoving = false;
@@ -670,6 +675,8 @@ public class SRXDriveBase {
 			rightCmdLevel *= SRXDriveBaseCfg.kTopRPM;
 			leftCmdLevel *= SRXDriveBaseCfg.kTopRPM;
 		}
+		
+		
 		driveRightMasterMtr.set(rightCmdLevel);
 		driveLeftMasterMtr.set(leftCmdLevel);
 		if (isConsoleDataEnabled){
@@ -688,7 +695,10 @@ public class SRXDriveBase {
 			driveRightMasterMtr.setEncPosition(0);
 			driveLeftMasterMtr.setEncPosition(0);
 			wheelToCenterDistanceIn = (SRXDriveBaseCfg.kTrackWidthIn / 2);
+			msg("Center wheel distance" + wheelToCenterDistanceIn);
 			speedRatio =(_turnRadiusIn + wheelToCenterDistanceIn) / (_turnRadiusIn - wheelToCenterDistanceIn);
+			msg ("Speed Ratio" + speedRatio);
+			msg("turnToAngle cmd:"+ _turnPowerLevel);
 			if (_turnAngleDeg > 0) {
 				rightCmdLevel = (_turnPowerLevel);
 				leftCmdLevel = (_turnPowerLevel * speedRatio);
@@ -704,18 +714,19 @@ public class SRXDriveBase {
 			} else {
 				outerDistanceCnts = 2 * Math.PI * ((_turnRadiusIn + wheelToCenterDistanceIn) * (Math.abs(_turnAngleDeg) / 360)) * SRXDriveBaseCfg.kRightEncoderCountsPerIn;
 			}
-		} else {
-			if (_isCascadeTurn) {
-				isTurnToAngleActive = false;
-			} else if ((_turnAngleDeg >= 0 && (getLeftEncoderPosition() > outerDistanceCnts))
+			msg("Outer Distance Counts" + outerDistanceCnts);
+		} else if ((_turnAngleDeg >= 0 && (getLeftEncoderPosition() > outerDistanceCnts))
 					|| (_turnAngleDeg <= 0 && (getRightEncoderPosition() > outerDistanceCnts))) {
-						
-				// Apply power level (.05) in opposite direction for 1 second to brake
-				rightCmdLevel = -(Math.signum(_turnAngleDeg) * 0.05);
-				leftCmdLevel = -(Math.signum(_turnAngleDeg) * 0.05);
+				if (_isCascadeTurn) {
+					isTurnToAngleActive = false;
+					msg("Casecade Active flag" + isTurnToAngleActive);
+				} else {
+				// Apply power level in opposite direction for 1 second to brake
+				rightCmdLevel = -(Math.signum(_turnAngleDeg) * SRXDriveBaseCfg.kStopBrakeValue);
+				leftCmdLevel = -(Math.signum(_turnAngleDeg) * SRXDriveBaseCfg.kStopBrakeValue);
 				if (!delay(1)) {
 					isTurnToAngleActive = false;
-					System.out.println("Active flag" + isTurnToAngleActive);
+					msg("Active flag" + isTurnToAngleActive);
 					isDriveTrainMoving = false;
 					setBrakeMode(false);
 					rightCmdLevel = 0;
@@ -840,8 +851,8 @@ public class SRXDriveBase {
 		} else if (getLeftEncoderPosition() >= leftEncoderCounts) {
 			
 			// Apply power level (.1) in oposite direction for 1 second to brake
-			rightCmdLevel = -0.05;
-			leftCmdLevel = -0.05;
+			rightCmdLevel = -SRXDriveBaseCfg.kStopBrakeValue;
+			leftCmdLevel = -SRXDriveBaseCfg.kStopBrakeValue;
 			if (!delay(1)) {
 				isTestMoveForStraightCalActive = false;
 				isDriveTrainMoving = false;
